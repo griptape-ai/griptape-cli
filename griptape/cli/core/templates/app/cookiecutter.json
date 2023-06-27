@@ -1,0 +1,5 @@
+{
+    "app_name": "griptape-app",
+    "package_name": "griptape_app",
+    "package_manager": "pip"
+}
