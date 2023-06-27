@@ -1,3 +1,5 @@
-from griptape.structures import Agent
+from griptape.structures import Agent, Structure
 
-Agent()
+
+def init_structure() -> Structure:
+    return Agent()
