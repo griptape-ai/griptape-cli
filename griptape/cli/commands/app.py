@@ -1,6 +1,5 @@
 import click
 from click import echo
-
 from griptape.cli.core.app import App
 
 
@@ -28,7 +27,7 @@ def new(name: str, package_manager: str) -> None:
     Create a new Griptape app.
     """
 
-    echo(f"Initializing app {name} with package manager {package_manager}...")
+    echo(f"Initializing app {name}")
 
     App(
         name=name,

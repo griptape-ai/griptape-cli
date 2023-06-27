@@ -1,6 +1,5 @@
 import os
 from typing import Optional
-
 import stringcase
 from attr import define, field
 from cookiecutter.main import cookiecutter
