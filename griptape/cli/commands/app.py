@@ -1,6 +1,6 @@
 import click
 from click import echo
-from griptape.structures import Structure
+from griptape.artifacts import TextArtifact
 
 from griptape.cli.core.app import App
 
@@ -22,9 +22,16 @@ def app(ctx):
     type=click.Choice(["pip", "poetry"]),
     help="Package manager to use for Griptape app.",
     default="pip",
-    show_default=True,
+    show_default=True
 )
-def new(name: str, package_manager: str) -> None:
+@click.option(
+    "--directory", "-d",
+    type=str,
+    help="Directory to create a new app in.",
+    default=".",
+    show_default=True
+)
+def new(name: str, package_manager: str, directory: str) -> None:
     """
     Create a new Griptape app.
     """
@@ -34,7 +41,7 @@ def new(name: str, package_manager: str) -> None:
     App(
         name=name,
         package_manager=package_manager
-    ).generate()
+    ).generate(directory)
 
 
 @app.command(name="run")
@@ -44,12 +51,12 @@ def new(name: str, package_manager: str) -> None:
     type=str,
     required=True
 )
-def run(arg: list[str]) -> None:
+def run(arg: list[str]) -> TextArtifact:
     try:
         from app import init_structure
 
         try:
-            init_structure().run(*arg)
+            return init_structure().run(*arg)
         except Exception as e:
             echo(f"Error running app: {e}", err=True)
     except Exception as e:

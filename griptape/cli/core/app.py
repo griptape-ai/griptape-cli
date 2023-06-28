@@ -13,12 +13,13 @@ class App:
     package_manager: str = field(kw_only=True)
     template_path: Optional[str] = field(default=None, kw_only=True)
 
-    def generate(self) -> None:
+    def generate(self, directory: str = ".") -> None:
         template = self.DEFAULT_TEMPLATE_PATH if self.template_path is None else self.template_path
 
         cookiecutter(
             template,
             no_input=True,
+            output_dir=directory,
             extra_context={
                 "app_name": self.name,
                 "package_name": stringcase.snakecase(self.name),
