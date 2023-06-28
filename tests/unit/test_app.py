@@ -23,8 +23,8 @@ class TestApp:
     def test_run(self):
         runner = CliRunner()
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            runner.invoke(app.new, ["FooBar", "-d", temp_dir])
+        with runner.isolated_filesystem():
+            runner.invoke(app.new, ["FooBar"])
 
             result = runner.invoke(app.run, ["-a", "foo"])
 
