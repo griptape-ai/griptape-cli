@@ -6,5 +6,20 @@ CLI for the Griptape Framework and Cloud.
 
 ```shell
 poetry install
-poetry run gp
+poetry run gt
+```
+
+## Griptape Cloud
+
+Set environment variables:
+
+```shell
+export GRIPTAPE_CLOUD_USERNAME="<USERNAME>"
+export GRIPTAPE_CLOUD_PASSWORD="<PASSWORD>"
+```
+
+Login
+
+```shell
+poetry run gt cloud login
 ```

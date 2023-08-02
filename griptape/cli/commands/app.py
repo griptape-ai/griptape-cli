@@ -1,9 +1,12 @@
+import os
 import click
 from click import echo
 from griptape.artifacts import TextArtifact
-
 from griptape.cli.core.app import App
+from griptape.cli.core.app_deployer import AppDeployer
+from griptape.cli.core.structure_runner import StructureRunner
 
+from griptape.cli.core.utils.constants import DEFAULT_ENDPOINT_URL
 
 @click.group()
 @click.pass_context
@@ -51,14 +54,48 @@ def new(name: str, package_manager: str, directory: str) -> None:
     type=str,
     required=True
 )
-def run(arg: list[str]) -> TextArtifact:
-    try:
-        from app import init_structure
+@click.option(
+    "--directory", "-d",
+    type=str,
+    help="Directory where app resides. Defaults to current directory.",
+    default=os.getcwd(),
+    show_default=True
+)
+def run(arg: list[str], directory: str) -> TextArtifact:
+    """
+    Run a Griptape app.
+    """
 
-        try:
-            return init_structure().run(*arg)
-        except Exception as e:
-            echo(f"Error running app: {e}", err=True)
-    except Exception as e:
-        echo("App doesn't exist", err=True)
+    structure_runner = StructureRunner(arg=arg, app_directory=directory)
+    structure_runner.run()
 
+
+@app.command(name="deploy")
+@click.option(
+    "--directory", "-d",
+    type=str,
+    help="Directory where app resides. Defaults to current directory.",
+    default=os.getcwd(),
+    show_default=True
+)
+@click.option(
+    "--endpoint-url", "-e",
+    type=str,
+    required=False,
+    help="Override default endpoint url",
+    default=DEFAULT_ENDPOINT_URL,
+)
+@click.option(
+    "--name", "-n",
+    type=str,
+    help="Griptape Cloud app name",
+    default=None,
+    required=False
+)
+def deploy(directory: str, endpoint_url: str, name: str) -> None:
+    """
+    Deploy a Griptape app to Griptape Cloud.
+    """
+
+    app_deployer = AppDeployer(app_directory=directory, endpoint_url=endpoint_url, name=name)
+    app_deployer.deploy()
