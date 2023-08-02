@@ -7,8 +7,6 @@ from griptape.cli.core.structure_runner import StructureRunner
 
 
 class TestApp:
-
-
     @pytest.fixture()
     def mock_structure_runner_instance(self, mocker):
         structure_runner_mock = mocker.Mock(spec=StructureRunner)
@@ -19,7 +17,7 @@ class TestApp:
     def mock_structure_runner(self, mocker, mock_structure_runner_instance):
         mocker.patch(
             "griptape.cli.commands.app.StructureRunner",
-            return_value=mock_structure_runner_instance
+            return_value=mock_structure_runner_instance,
         )
 
     @pytest.fixture()
@@ -32,7 +30,7 @@ class TestApp:
     def mock_app_deployer(self, mocker, mock_app_deployer_instance):
         mocker.patch(
             "griptape.cli.commands.app.AppDeployer",
-            return_value = mock_app_deployer_instance
+            return_value=mock_app_deployer_instance,
         )
 
     def test_new(self):
@@ -63,4 +61,3 @@ class TestApp:
 
             mock_app_deployer_instance.deploy.assert_called_once()
             assert result.exit_code == 0
-

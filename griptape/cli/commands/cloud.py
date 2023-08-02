@@ -2,19 +2,23 @@ import click
 from click import echo
 from griptape.cli.core.utils.auth import get_auth_token
 
+
 @click.group()
 @click.pass_context
 def cloud(ctx):
     pass
 
+
 @cloud.command(name="login")
 @click.option(
-    "--relogin", "-r",
+    "--relogin",
+    "-r",
     is_flag=True,
     help="Set flag to force relogin",
 )
 @click.option(
-    "--endpoint-url", "-e",
+    "--endpoint-url",
+    "-e",
     type=str,
     required=False,
     help="Override default endpoint url",

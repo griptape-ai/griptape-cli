@@ -7,9 +7,10 @@ from attr import Factory, define, field
 
 @define
 class StructureRunner:
-
     arg: list[str] = field(kw_only=True)
-    app_directory: Optional[str] = field(kw_only=True, default=Factory(lambda: os.getcwd()))
+    app_directory: Optional[str] = field(
+        kw_only=True, default=Factory(lambda: os.getcwd())
+    )
 
     def __attrs_post_init__(self):
         self.app_directory = os.path.abspath(self.app_directory)
@@ -30,4 +31,6 @@ class StructureRunner:
     def _install_pip_dependencies(self) -> None:
         requirements_path = os.path.join(self.app_directory, "requirements.txt")
         if os.path.exists(requirements_path):
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", requirements_path])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "-r", requirements_path]
+            )
