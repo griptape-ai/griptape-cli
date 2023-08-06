@@ -2,7 +2,9 @@ import os
 import subprocess
 import sys
 from typing import Optional
+
 from attr import Factory, define, field
+from dotenv import load_dotenv
 
 
 @define
@@ -19,6 +21,7 @@ class StructureRunner:
         try:
             sys.path.append(self.app_directory)
             self._install_pip_dependencies()
+            self._load_dotenv()
             from app import init_structure
 
             try:
@@ -34,3 +37,8 @@ class StructureRunner:
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", "-r", requirements_path]
             )
+
+    def _load_dotenv(self) -> None:
+        dotenv_path = os.path.join(self.app_directory, ".env")
+        if os.path.exists(dotenv_path):
+            load_dotenv(dotenv_path)
