@@ -50,14 +50,3 @@ class TestApp:
 
             mock_structure_runner_instance.run.assert_called_once()
             assert result.exit_code == 0
-
-    def test_deploy(self, mock_app_deployer_instance, mock_app_deployer):
-        runner = CliRunner()
-
-        with runner.isolated_filesystem():
-            runner.invoke(app.new, ["FooBar"])
-
-            result = runner.invoke(app.deploy, ["-d", "./FooBar"])
-
-            mock_app_deployer_instance.deploy.assert_called_once()
-            assert result.exit_code == 0

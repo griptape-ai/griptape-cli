@@ -1,2 +1,2 @@
 griptape
-griptape-tools
+python-dotenv

@@ -8,8 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 griptape = "*"
-griptape-tools = "*"
-
+python-dotenv = "*"
 
 [build-system]
 requires = ["poetry-core"]
