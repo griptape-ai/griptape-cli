@@ -40,7 +40,7 @@ class AppDeployer:
         return shutil.copytree(
             self.app_directory,
             os.path.join(self.app_directory, "zip_tmp"),
-            ignore=shutil.ignore_patterns(".venv*"),
+            ignore=shutil.ignore_patterns(".venv*", "__pycache__*", "*.pyc"),
         )
 
     def _create_deployment_zip_file(self, tmp_dir: str) -> str:

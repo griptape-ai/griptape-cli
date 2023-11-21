@@ -197,7 +197,6 @@ def create_deployment(app_id: str, directory: str, endpoint_url: str) -> None:
     app_deployer = AppDeployer(
         app_directory=directory,
         endpoint_url=endpoint_url,
-        cloud_client=cloud_client,
     )
     source = app_deployer.get_deployment_source()
 
@@ -209,6 +208,7 @@ def create_deployment(app_id: str, directory: str, endpoint_url: str) -> None:
         )
         if response.status_code != 202:
             raise Exception(response.json())
+        echo(response.json())
     except Exception as e:
         echo(f"Unable to create deployment: {e}", err=True)
         raise e
