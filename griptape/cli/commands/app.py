@@ -3,11 +3,7 @@ import click
 from click import echo
 from griptape.artifacts import TextArtifact
 from griptape.cli.core.app import App
-from griptape.cli.core.app_deployer import AppDeployer
-from griptape.cli.core.cloud_client import CloudClient
 from griptape.cli.core.structure_runner import StructureRunner
-
-from griptape.cli.core.utils.constants import DEFAULT_ENDPOINT_URL
 
 
 @click.group()
@@ -63,5 +59,7 @@ def run(arg: list[str], directory: str) -> TextArtifact:
     Run a Griptape app.
     """
 
-    structure_runner = StructureRunner(arg=arg, app_directory=directory)
+    echo(f"Running app")
+
+    structure_runner = StructureRunner(args=arg, app_directory=directory)
     structure_runner.run()

@@ -1,11 +1,11 @@
-import json
 import os
 from typing import Optional
 import click
 from click import echo
-from griptape.cli.core.app_deployer import AppDeployer
+from griptape.cli.core.app_packager import AppPackager
 from griptape.cli.core.cloud_client import CloudClient
 from griptape.cli.core.utils.constants import DEFAULT_ENDPOINT_URL
+from InquirerPy import inquirer
 
 
 @click.group()
@@ -25,33 +25,37 @@ def cloud(ctx):
 )
 def configure(endpoint_url: str) -> None:
     try:
+        counter = 0
         cloud_client = CloudClient(endpoint_url=endpoint_url)
         organizations = cloud_client.list_organizations().json()["organizations"]
-        organization_choices = click.Choice(
-            [f"{org['name']}: {org['organization_id']}" for org in organizations]
-        )
-        value = click.prompt(
-            "Select the organization you want to use\n",
-            type=organization_choices,
-            show_choices=True,
-        )
-        index = organization_choices.choices.index(value)
-        org = organizations[index]
+
+        org_choices = [
+            f"{counter+1}). {org['name']}: {org['organization_id']}"
+            for org in organizations
+        ]
+        org_choice = inquirer.select(
+            message="Select the organization you want to use:",
+            choices=org_choices,
+        ).execute()
+
+        org = organizations[org_choices.index(org_choice)]
 
         environments = cloud_client.list_environments(
             organization_id=org["organization_id"]
         ).json()["environments"]
 
-        environment_choices = click.Choice(
-            [f"{env['name']}: {env['environment_id']}" for env in environments]
-        )
-        value = click.prompt(
-            "Select the environment you want to use\n",
-            type=environment_choices,
-            show_choices=True,
-        )
-        index = environment_choices.choices.index(value)
-        env = environments[index]
+        counter = 0
+        environment_choices = [
+            f"{counter+1}). {env['name']}: {env['environment_id']}"
+            for env in environments
+        ]
+
+        env_choice = inquirer.select(
+            message="Select the environment you want to use:",
+            choices=environment_choices,
+        ).execute()
+
+        env = environments[environment_choices.index(env_choice)]
 
         profile_name = click.prompt(
             "Enter a name for this profile",
@@ -107,13 +111,39 @@ def list_organizations(endpoint_url: str):
     help="Override default endpoint url",
     default=DEFAULT_ENDPOINT_URL,
 )
-def list_organizations(organization_id: str, endpoint_url: str):
+def list_environments(organization_id: str, endpoint_url: str):
     """
-    List Griptape Cloud Organizations.
+    List Griptape Cloud Environments.
     """
 
     cloud_client = CloudClient(endpoint_url=endpoint_url)
     response = cloud_client.list_environments(organization_id=organization_id)
+    echo(response.json())
+
+
+@cloud.command(name="list-apps")
+@click.option(
+    "--environment-id",
+    "-n",
+    type=str,
+    required=True,
+    help="Environment ID to list apps for",
+)
+@click.option(
+    "--endpoint-url",
+    "-e",
+    type=str,
+    required=False,
+    help="Override default endpoint url",
+    default=DEFAULT_ENDPOINT_URL,
+)
+def list_apps(environment_id: str, endpoint_url: str):
+    """
+    List Griptape Cloud Apps.
+    """
+
+    cloud_client = CloudClient(endpoint_url=endpoint_url)
+    response = cloud_client.list_apps(environment_id=environment_id)
     echo(response.json())
 
 
@@ -194,11 +224,10 @@ def create_deployment(app_id: str, directory: str, endpoint_url: str) -> None:
 
     cloud_client = CloudClient(endpoint_url=endpoint_url)
 
-    app_deployer = AppDeployer(
+    app_packager = AppPackager(
         app_directory=directory,
-        endpoint_url=endpoint_url,
     )
-    source = app_deployer.get_deployment_source()
+    source = app_packager.get_deployment_source()
 
     deployment_data = {"source": {"zip_file": {"base64_content": source}}}
 

@@ -6,8 +6,8 @@ authors = []
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-griptape = "*"
+python = ">=3.9,<3.12"
+griptape = { git = "https://github.com/griptape-ai/griptape", branch = "dev" }
 python-dotenv = "*"
 
 [build-system]

@@ -7,9 +7,8 @@ from click import echo
 
 
 @define
-class AppDeployer:
+class AppPackager:
     app_directory: str = field(kw_only=True)
-    endpoint_url: str = field(kw_only=True)
 
     def __attrs_post_init__(self):
         self.app_directory = os.path.abspath(self.app_directory)

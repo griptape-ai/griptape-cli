@@ -2,6 +2,16 @@
 
 CLI for the Griptape Framework and Cloud.
 
+## Can I Just Install the CLI?
+
+Sure!
+
+1. Install [pipx](https://github.com/pypa/pipx)
+1. Run:
+   ```shell
+   pipx install git+https://github.com/griptape-ai/griptape-cli.git
+   ```
+
 ## Development
 
 ```shell
@@ -23,15 +33,19 @@ Set environment variables:
 export GRIPTAPE_CLOUD_API_KEY=<api_key>
 ```
 
-Note: You can create an API Key using the [frontend](https://cloud-staging.griptape.ai/).
+Note: You can create an API Key using the [frontend](https://cloud.griptape.ai/).
+
+To override the Griptape Cloud endpoint used, set the following environment variable:
+
+```shell
+export GRIPTAPE_CLOUD_ENDPOINT_URL="https://<endpoint>"
+```
 
 Configure the Cloud:
 
 ```shell
 poetry run gt cloud configure
 ```
-
-Note: Copy and paste the full 'name: ID' string in the terminal to select
 
 Use the cloud command to make API calls:
 

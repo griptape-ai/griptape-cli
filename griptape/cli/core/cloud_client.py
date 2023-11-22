@@ -71,6 +71,10 @@ class CloudClient:
         )
         return requests.get(url=url, headers=self._get_authorization_headers())
 
+    def list_apps(self, environment_id: str) -> Response:
+        url = urljoin(self.endpoint_url, f"environments/{environment_id}/apps")
+        return requests.get(url=url, headers=self._get_authorization_headers())
+
     def create_app(self, app_data: dict, environment_id: Optional[str]):
         if not environment_id:
             profile_data: dict = self._extract_profile_data_from_local_storage()

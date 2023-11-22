@@ -2,7 +2,7 @@ import tempfile
 import pytest
 from click.testing import CliRunner
 from griptape.cli.commands import app
-from griptape.cli.core.app_deployer import AppDeployer
+from griptape.cli.core.app_packager import AppPackager
 from griptape.cli.core.structure_runner import StructureRunner
 
 
@@ -22,7 +22,7 @@ class TestApp:
 
     @pytest.fixture()
     def mock_app_deployer_instance(self, mocker):
-        app_deployer_mock = mocker.Mock(spec=AppDeployer)
+        app_deployer_mock = mocker.Mock(spec=AppPackager)
         app_deployer_mock.deploy.return_value = None
         return app_deployer_mock
 

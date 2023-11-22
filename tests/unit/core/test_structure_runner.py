@@ -24,7 +24,7 @@ class TestStructureRunner:
             workdir = os.getcwd()
             os.chdir(temp_dir)
             structure_runner = StructureRunner(
-                arg=["foo", "bar"], app_directory="./FooBar"
+                args=["foo", "bar"], app_directory="./FooBar"
             )
             os.chdir(workdir)
 
