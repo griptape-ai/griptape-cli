@@ -7,9 +7,16 @@ CLI for the Griptape Framework and Cloud.
 Sure!
 
 1. Install [pipx](https://github.com/pypa/pipx)
+   ```
+   python3 -m pip install --user pipx
+   ```
 1. Run:
    ```shell
-   pipx install git+https://github.com/griptape-ai/griptape-cli.git
+   python3 -m pipx install git+ssh://git@github.com/griptape-ai/griptape-cli.git
+   ```
+1. Verify installation
+   ```
+   gt --help
    ```
 
 ## Development
