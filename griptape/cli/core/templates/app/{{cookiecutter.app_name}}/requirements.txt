@@ -1,2 +1,2 @@
-griptape@git+https://github.com/griptape-ai/griptape@dev
+griptape{{cookiecutter.griptape_version}}
 python-dotenv

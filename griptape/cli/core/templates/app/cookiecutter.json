@@ -1,5 +1,6 @@
 {
-    "app_name": "griptape-app",
-    "package_name": "griptape_app",
-    "package_manager": "pip"
+  "app_name": "griptape-app",
+  "package_name": "griptape_app",
+  "package_manager": "pip",
+  "griptape_version": "0.21.1"
 }

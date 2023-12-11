@@ -2,7 +2,7 @@ import os
 
 REMOVE_PATHS = [
     '{% if cookiecutter.package_manager != "pip" %}requirements.txt{% endif %}',
-    '{% if cookiecutter.package_manager != "poetry" %}poetry.toml{% endif %}',
+    '{% if cookiecutter.package_manager != "poetry" %}pyproject.toml{% endif %}',
 ]
 
 for path in REMOVE_PATHS:

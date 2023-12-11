@@ -14,6 +14,7 @@ class App:
     name: str = field(kw_only=True)
     package_manager: str = field(kw_only=True)
     template_path: Optional[str] = field(default=None, kw_only=True)
+    griptape_version: Optional[str] = field(default=None, kw_only=True)
 
     def generate(self, directory: str = ".") -> None:
         template = (
@@ -21,6 +22,16 @@ class App:
             if self.template_path is None
             else self.template_path
         )
+
+        if not self.griptape_version:
+            if self.package_manager == "pip":
+                self.griptape_version = ""
+            else:
+                self.griptape_version = '"*"'
+        else:
+            self.griptape_version = f"{self.griptape_version}"
+            if self.package_manager == "pip":
+                self.griptape_version = f"=={self.griptape_version}"
 
         cookiecutter(
             template,
@@ -30,5 +41,6 @@ class App:
                 "app_name": self.name,
                 "package_name": stringcase.snakecase(self.name),
                 "package_manager": self.package_manager,
+                "griptape_version": self.griptape_version,
             },
         )

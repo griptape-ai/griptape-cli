@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-griptape = { git = "https://github.com/griptape-ai/griptape", branch = "dev" }
+griptape = {{cookiecutter.griptape_version}}
 python-dotenv = "*"
 
 [build-system]

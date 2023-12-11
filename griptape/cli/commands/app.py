@@ -34,14 +34,23 @@ def app(ctx):
     default=".",
     show_default=True,
 )
-def new(name: str, package_manager: str, directory: str) -> None:
+@click.option(
+    "--griptape-version",
+    "-g",
+    type=str,
+    help="Version of griptape to use for the app.",
+    required=False,
+)
+def new(name: str, package_manager: str, directory: str, griptape_version: str) -> None:
     """
     Create a new Griptape app.
     """
 
     echo(f"Initializing app {name}")
 
-    App(name=name, package_manager=package_manager).generate(directory)
+    App(
+        name=name, package_manager=package_manager, griptape_version=griptape_version
+    ).generate(directory)
 
 
 @app.command(name="run")
