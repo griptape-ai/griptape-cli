@@ -4,6 +4,8 @@ import stringcase
 from attr import define, field
 from cookiecutter.main import cookiecutter
 
+from griptape.cli.core.utils.constants import GRIPTAPE_VERSION
+
 
 @define
 class App:
@@ -25,13 +27,14 @@ class App:
 
         if not self.griptape_version:
             if self.package_manager == "pip":
-                self.griptape_version = ""
+                self.griptape_version = f">={GRIPTAPE_VERSION}"
             else:
-                self.griptape_version = '"*"'
+                self.griptape_version = f'"^{GRIPTAPE_VERSION}"'
         else:
-            self.griptape_version = f"{self.griptape_version}"
             if self.package_manager == "pip":
                 self.griptape_version = f"=={self.griptape_version}"
+            else:
+                self.griptape_version = f'"{self.griptape_version}"'
 
         cookiecutter(
             template,
