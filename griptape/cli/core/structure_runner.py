@@ -2,7 +2,6 @@ import os
 import subprocess
 import sys
 from typing import Optional
-from dotenv import load_dotenv
 
 from attr import Factory, define, field
 
