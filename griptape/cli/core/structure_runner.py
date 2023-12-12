@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 from typing import Optional
+from dotenv import load_dotenv
 
 from attr import Factory, define, field
 
@@ -18,6 +19,7 @@ class StructureRunner:
 
     def run(self):
         try:
+            os.chdir(self.app_directory)
             sys.path.append(self.app_directory)
             if not self._install_pip_dependencies():
                 self._install_poetry_dependencies()
