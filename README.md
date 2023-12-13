@@ -9,7 +9,7 @@ CLI for the Griptape Framework and Cloud.
 
 ## Prerequisites
 
-Using this CLI requires a [Griptape Cloud](https://www.griptape.ai/griptape-cloud/) account.
+CLI `cloud` commands require a [Griptape Cloud](https://www.griptape.ai/griptape-cloud/) account.
 
 ## Quick Start
 
