@@ -2,7 +2,6 @@ import json
 import os
 import stat
 from typing import Optional
-from click import echo
 import requests
 from requests import Response
 from requests.compat import urljoin

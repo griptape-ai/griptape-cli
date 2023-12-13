@@ -1,36 +1,26 @@
-# Griptape CLI
+# griptape-cli
+
+[![PyPI Version](https://img.shields.io/pypi/v/griptape-cli.svg)](https://pypi.python.org/pypi/griptape-cli)
+[![Tests](https://github.com/griptape-ai/griptape-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/griptape-ai/griptape-cli/actions/workflows/tests.yml)
+[![Docs](https://readthedocs.org/projects/griptape/badge/)](https://griptape.readthedocs.io/)
+[![Griptape Discord](https://dcbadge.vercel.app/api/server/gnWRz88eym?compact=true&style=flat)](https://discord.gg/gnWRz88eym)
 
 CLI for the Griptape Framework and Cloud.
 
-## Can I Just Install the CLI?
+## Prerequisites
 
-Sure!
+Using this CLI requires a [Griptape Cloud](https://www.griptape.ai/griptape-cloud/) account.
 
-1. Install [pipx](https://github.com/pypa/pipx)
+## Quick Start
+
+1. Install griptape-cli
    ```
-   python3 -m pip install --user pipx
-   ```
-1. Run:
-   ```shell
-   python3 -m pipx install git+ssh://git@github.com/griptape-ai/griptape-cli.git
+   pipx install griptape-cli
    ```
 1. Verify installation
    ```
    gt --help
    ```
-
-## Development
-
-```shell
-poetry install
-poetry run gt
-```
-
-## Tests
-
-```shell
-poetry run pytest
-```
 
 ## Griptape Cloud
 
@@ -39,8 +29,6 @@ Set environment variables:
 ```shell
 export GRIPTAPE_CLOUD_API_KEY=<api_key>
 ```
-
-Note: You can create an API Key using the [frontend](https://cloud.griptape.ai/).
 
 To override the Griptape Cloud endpoint used, set the following environment variable:
 
@@ -81,5 +69,38 @@ poetry run gt cloud create-app --name "Demo App"
 Create a Deployment for the App on the Cloud using the App ID:
 
 ```shell
-poetry run gt cloud create-deployment --app-id ee95ba10-9e29-4759-b357-dc513821c5b2 --directory ~/workplace/demo_app
+poetry run gt cloud create-deployment --app-id 12345678-9e29-4759-b357-dc513821c5b2 --directory ~/workplace/demo_app
 ```
+
+## Documentation
+
+Please refer to [Griptape Docs](https://docs.griptape.ai/)
+
+## Development
+
+```shell
+poetry install
+poetry run gt
+```
+
+## Tests
+
+```shell
+poetry run pytest
+```
+
+## Contributing
+
+Thank you for considering contributing to Griptape! Before you start, please read the following guidelines.
+
+### Submitting Issues
+
+If you have identified a bug, want to propose a new feature, or have a question, please submit an issue through our public [issue tracker](https://github.com/griptape-ai/griptape-cli/issues). Before submitting a new issue, please check the existing issues to ensure it hasn't been reported or discussed before.
+
+## Versioning
+
+Griptape CLI is in constant development and its APIs and documentation are subject to change. Until we stabilize the API and release version 1.0.0, we will use minor versions (i.e., x.Y.z) to introduce features and breaking features, and patch versions (i.e., x.y.Z) for bug fixes.
+
+## License
+
+Griptape CLI is available under the Apache 2.0 License.
