@@ -57,7 +57,7 @@ poetry run gt app new --directory ~/workplace demo_app
 Test an App locally:
 
 ```shell
-poetry run gt app run --directory ~/workplace/demo_app --arg "what is griptape?"
+poetry run gt app run --directory ~/workplace/demo_app --arg "what is griptape?" --init-param "key" "value"
 ```
 
 Create an App on the Cloud:

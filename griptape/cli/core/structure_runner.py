@@ -9,6 +9,9 @@ from attr import Factory, define, field
 @define
 class StructureRunner:
     args: list[str] = field(kw_only=True)
+    init_params: Optional[dict[str, str]] = field(
+        kw_only=True, default=Factory(lambda: dict())
+    )
     app_directory: Optional[str] = field(
         kw_only=True, default=Factory(lambda: os.getcwd())
     )
@@ -25,7 +28,7 @@ class StructureRunner:
             from app import init_structure
 
             try:
-                return init_structure(*self.args).run(*self.args)
+                return init_structure(*self.args, **self.init_params).run(*self.args)
             except Exception as e:
                 raise Exception(f"Error running app: {e}")
         except Exception as e:
