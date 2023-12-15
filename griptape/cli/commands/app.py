@@ -63,7 +63,6 @@ def new(name: str, package_manager: str, directory: str, griptape_version: str) 
     multiple=True,
     help="Initialization parameters for the app in the format 'key value'.",
     required=False,
-    
 )
 @click.option(
     "--directory",
@@ -73,7 +72,9 @@ def new(name: str, package_manager: str, directory: str, griptape_version: str) 
     default=os.getcwd(),
     show_default=True,
 )
-def run(arg: list[str], init_params: list[tuple[str,str]], directory: str) -> TextArtifact:
+def run(
+    arg: list[str], init_params: list[tuple[str, str]], directory: str
+) -> TextArtifact:
     """
     Run a Griptape app.
     """
@@ -81,5 +82,7 @@ def run(arg: list[str], init_params: list[tuple[str,str]], directory: str) -> Te
     echo(f"Running app")
     params = {k: v for k, v in init_params}
 
-    structure_runner = StructureRunner(args=arg, init_params=params, app_directory=directory)
+    structure_runner = StructureRunner(
+        args=arg, init_params=params, app_directory=directory
+    )
     structure_runner.run()

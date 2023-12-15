@@ -9,7 +9,7 @@ from attr import Factory, define, field
 @define
 class StructureRunner:
     args: list[str] = field(kw_only=True)
-    init_params: Optional[dict[str,str]] = field(
+    init_params: Optional[dict[str, str]] = field(
         kw_only=True, default=Factory(lambda: dict())
     )
     app_directory: Optional[str] = field(
