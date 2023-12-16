@@ -24,18 +24,6 @@ CLI `cloud` commands require a [Griptape Cloud](https://www.griptape.ai/griptape
 
 ## Griptape Cloud
 
-Set environment variables:
-
-```shell
-export GRIPTAPE_CLOUD_API_KEY=<api_key>
-```
-
-To override the Griptape Cloud endpoint used, set the following environment variable:
-
-```shell
-export GRIPTAPE_CLOUD_ENDPOINT_URL="https://<endpoint>"
-```
-
 Configure the Cloud:
 
 ```shell
