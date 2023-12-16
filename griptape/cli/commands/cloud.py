@@ -5,6 +5,7 @@ from click import echo
 from griptape.cli.core.app_packager import AppPackager
 from griptape.cli.core.cloud_client import CloudClient
 from griptape.cli.core.utils.constants import DEFAULT_ENDPOINT_URL
+from griptape.cli.core.utils.endpoint_utils import is_valid_endpoint
 from InquirerPy import inquirer
 
 
@@ -15,18 +16,31 @@ def cloud(ctx):
 
 
 @cloud.command(name="configure")
-@click.option(
-    "--endpoint-url",
-    "-e",
-    type=str,
-    required=False,
-    help="Override default endpoint url",
-    default=DEFAULT_ENDPOINT_URL,
-)
-def configure(endpoint_url: str) -> None:
+def configure() -> None:
     try:
+        api_key = inquirer.text("Enter your Griptape Cloud API key: ").execute()
+
+        endpoint_choices = ["https://api.cloud.griptape.ai", "Other"]
+        endpoint_url = inquirer.select(
+            message="Select the endpoint you want to use: ",
+            choices=endpoint_choices,
+        ).execute()
+        if endpoint_url == "Other":
+            valid_endpoint = False
+            while not valid_endpoint:
+                endpoint_url = inquirer.text(
+                    message="Enter the endpoint you want to use: ",
+                    default=DEFAULT_ENDPOINT_URL,
+                ).execute()
+                if is_valid_endpoint(endpoint_url):
+                    valid_endpoint = True
+                else:
+                    echo(
+                        f"Invalid endpoint url detected: {endpoint_url}. \nPlease set a valid endpoint url with the format: https://api.cloud<-stage>.griptape.ai."
+                    )
+
         counter = 0
-        cloud_client = CloudClient(endpoint_url=endpoint_url)
+        cloud_client = CloudClient(api_key=api_key, endpoint_url=endpoint_url)
         organizations = cloud_client.list_organizations().json()["organizations"]
 
         org_choices = [
@@ -66,8 +80,10 @@ def configure(endpoint_url: str) -> None:
 
         cloud_client._write_gt_cloud_profile(
             profile_name=profile_name,
+            api_key=api_key,
             organization_id=org["organization_id"],
             environment_id=env["environment_id"],
+            endpoint_url=endpoint_url,
         )
 
         echo(f"Successfully configured profile {profile_name}!")
@@ -78,19 +94,19 @@ def configure(endpoint_url: str) -> None:
 
 @cloud.command(name="list-organizations")
 @click.option(
-    "--endpoint-url",
-    "-e",
+    "--profile",
+    "-p",
     type=str,
+    help="Griptape Cloud profile name",
+    default=None,
     required=False,
-    help="Override default endpoint url",
-    default=DEFAULT_ENDPOINT_URL,
 )
-def list_organizations(endpoint_url: str):
+def list_organizations(profile: str):
     """
     List Griptape Cloud Organizations.
     """
 
-    cloud_client = CloudClient(endpoint_url=endpoint_url)
+    cloud_client = CloudClient(profile=profile)
     response = cloud_client.list_organizations()
     echo(response.json())
 
@@ -100,23 +116,23 @@ def list_organizations(endpoint_url: str):
     "--organization-id",
     "-o",
     type=str,
-    required=True,
+    required=False,
     help="Organization ID to list environments for",
 )
 @click.option(
-    "--endpoint-url",
-    "-e",
+    "--profile",
+    "-p",
     type=str,
+    help="Griptape Cloud profile name",
+    default=None,
     required=False,
-    help="Override default endpoint url",
-    default=DEFAULT_ENDPOINT_URL,
 )
-def list_environments(organization_id: str, endpoint_url: str):
+def list_environments(organization_id: str, profile: str):
     """
     List Griptape Cloud Environments.
     """
 
-    cloud_client = CloudClient(endpoint_url=endpoint_url)
+    cloud_client = CloudClient(profile=profile)
     response = cloud_client.list_environments(organization_id=organization_id)
     echo(response.json())
 
@@ -126,23 +142,23 @@ def list_environments(organization_id: str, endpoint_url: str):
     "--environment-id",
     "-n",
     type=str,
-    required=True,
+    required=False,
     help="Environment ID to list apps for",
 )
 @click.option(
-    "--endpoint-url",
-    "-e",
+    "--profile",
+    "-p",
     type=str,
+    help="Griptape Cloud profile name",
+    default=None,
     required=False,
-    help="Override default endpoint url",
-    default=DEFAULT_ENDPOINT_URL,
 )
-def list_apps(environment_id: str, endpoint_url: str):
+def list_apps(environment_id: str, profile: str):
     """
     List Griptape Cloud Apps.
     """
 
-    cloud_client = CloudClient(endpoint_url=endpoint_url)
+    cloud_client = CloudClient(profile=profile)
     response = cloud_client.list_apps(environment_id=environment_id)
     echo(response.json())
 
@@ -154,14 +170,6 @@ def list_apps(environment_id: str, endpoint_url: str):
     type=str,
     help="Griptape Cloud app name",
     required=True,
-)
-@click.option(
-    "--endpoint-url",
-    "-e",
-    type=str,
-    required=False,
-    help="Override default endpoint url",
-    default=DEFAULT_ENDPOINT_URL,
 )
 @click.option(
     "--environment-id",
@@ -180,7 +188,7 @@ def list_apps(environment_id: str, endpoint_url: str):
     required=False,
 )
 def create_app(
-    name: str, endpoint_url: str, environment_id: Optional[str], profile: Optional[str]
+    name: str, environment_id: Optional[str], profile: Optional[str]
 ) -> None:
     """
     Create a Griptape App on the Griptape Cloud.
@@ -188,7 +196,7 @@ def create_app(
     app_data = {
         "name": name,
     }
-    cloud_client = CloudClient(endpoint_url=endpoint_url, profile=profile)
+    cloud_client = CloudClient(profile=profile)
     response = cloud_client.create_app(app_data=app_data, environment_id=environment_id)
     echo(response.json())
 
@@ -210,19 +218,19 @@ def create_app(
     show_default=True,
 )
 @click.option(
-    "--endpoint-url",
-    "-e",
+    "--profile",
+    "-p",
     type=str,
+    help="Griptape Cloud profile name",
+    default=None,
     required=False,
-    help="Override default endpoint url",
-    default=DEFAULT_ENDPOINT_URL,
 )
-def create_deployment(app_id: str, directory: str, endpoint_url: str) -> None:
+def create_deployment(app_id: str, directory: str, profile: str) -> None:
     """
     Deploy a Griptape App to Griptape Cloud.
     """
 
-    cloud_client = CloudClient(endpoint_url=endpoint_url)
+    cloud_client = CloudClient(profile=profile)
 
     app_packager = AppPackager(
         app_directory=directory,
@@ -235,8 +243,6 @@ def create_deployment(app_id: str, directory: str, endpoint_url: str) -> None:
         response = cloud_client.create_deployment(
             deployment_data=deployment_data, app_id=app_id
         )
-        if response.status_code != 202:
-            raise Exception(response.json())
         echo(response.json())
     except Exception as e:
         echo(f"Unable to create deployment: {e}", err=True)
