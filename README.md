@@ -60,6 +60,12 @@ Create a Deployment for the App on the Cloud using the App ID:
 poetry run gt cloud create-deployment --app-id 12345678-9e29-4759-b357-dc513821c5b2 --directory ~/workplace/demo_app
 ```
 
+Run an App on the Cloud using the App ID:
+
+```shell
+poetry run gt cloud run --app-id 12345678-9e29-4759-b357-dc513821c5b2 --arg "what is griptape?" --init-param "key" "value"
+```
+
 ## Documentation
 
 Please refer to [Griptape Docs](https://docs.griptape.ai/)

@@ -1,7 +1,7 @@
 import os
 from typing import Optional
 import click
-from click import echo
+from click import echo, style
 from griptape.cli.core.app_packager import AppPackager
 from griptape.cli.core.cloud_client import CloudClient
 from griptape.cli.core.utils.constants import DEFAULT_ENDPOINT_URL
@@ -246,4 +246,140 @@ def create_deployment(app_id: str, directory: str, profile: str) -> None:
         echo(response.json())
     except Exception as e:
         echo(f"Unable to create deployment: {e}", err=True)
+        raise e
+
+
+@cloud.command(name="run")
+@click.option(
+    "--app-id",
+    "-A",
+    type=str,
+    help="Griptape Cloud app id",
+    required=True,
+)
+@click.option(
+    "--deployment-id",
+    "-d",
+    type=str,
+    help="The targeted deployment id of the app to run",
+    default=None,
+    required=False,
+)
+@click.option(
+    "--session-id",
+    "-s",
+    type=str,
+    help="The targeted session id of the app to run",
+    default=None,
+    required=False,
+)
+@click.option(
+    "--arg",
+    "-a",
+    "args",
+    multiple=True,
+    type=str,
+    help="Arguments to pass to the structure run method",
+    required=False,
+)
+@click.option(
+    "--init-param",
+    "-i",
+    "init_params",
+    type=(str, str),
+    multiple=True,
+    help="Initialization parameters for the app in the format 'key value'",
+    required=False,
+)
+@click.option(
+    "--no-polling",
+    "-n",
+    default=False,
+    is_flag=True,
+    type=bool,
+    help="Disable polling for the run and events",
+    required=False,
+    show_default=True,
+)
+@click.option(
+    "--profile",
+    "-p",
+    type=str,
+    help="Griptape Cloud profile name",
+    default=None,
+    required=False,
+)
+def run(
+    app_id: str,
+    deployment_id: str,
+    session_id: str,
+    args: list[str],
+    init_params: list[tuple[str, str]],
+    no_polling: bool,
+    profile: str,
+) -> None:
+    """
+    Run a Griptape App on the Cloud.
+    """
+
+    cloud_client = CloudClient(profile=profile)
+
+    run_data = {}
+
+    if args:
+        run_data["args"] = list(args)
+    if deployment_id:
+        run_data["deployment_id"] = deployment_id
+    if session_id:
+        run_data["session_id"] = session_id
+    if init_params:
+        run_data["init_params"] = {k: v for k, v in init_params}
+
+    try:
+        response = cloud_client.create_run(run_data=run_data, app_id=app_id)
+        echo(style(response.json(), fg="cyan"))
+    except Exception as e:
+        echo(f"Unable to create run: {e}", err=True)
+        raise e
+
+    if not no_polling:
+        try:
+            echo("\nPolling run and events...\n")
+            cloud_client.poll_run(run_id=response.json()["run_id"])
+        except Exception as e:
+            echo(f"Unable to poll run: {e}", err=True)
+            raise e
+
+
+@cloud.command(name="get-run")
+@click.option(
+    "--run-id",
+    "-r",
+    type=str,
+    help="Griptape Cloud run id",
+    required=True,
+)
+@click.option(
+    "--profile",
+    "-p",
+    type=str,
+    help="Griptape Cloud profile name",
+    default=None,
+    required=False,
+)
+def get_run(
+    run_id: str,
+    profile: str,
+) -> None:
+    """
+    Get a Griptape Run on the Cloud.
+    """
+
+    cloud_client = CloudClient(profile=profile)
+
+    try:
+        response = cloud_client.get_run(run_id=run_id)
+        echo(response.json())
+    except Exception as e:
+        echo(f"Unable to get run: {e}", err=True)
         raise e

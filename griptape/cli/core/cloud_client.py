@@ -1,8 +1,9 @@
 import json
 import os
 import stat
+import time
 from typing import Optional
-from click import echo
+from click import echo, style
 import requests
 from requests import Response
 from requests.compat import urljoin
@@ -151,7 +152,11 @@ class CloudClient:
         url = urljoin(self.endpoint_url, f"environments/{environment_id}/apps")
         return self._send_request("GET", url)
 
-    def create_app(self, app_data: dict, environment_id: Optional[str]):
+    def list_events(self, run_id: str) -> Response:
+        url = urljoin(self.endpoint_url, f"runs/{run_id}/events")
+        return self._send_request("GET", url)
+
+    def create_app(self, app_data: dict, environment_id: Optional[str]) -> Response:
         if not environment_id:
             try:
                 environment_id = self.profile_data[self.profile]["environment_id"]
@@ -162,6 +167,38 @@ class CloudClient:
         url = urljoin(self.endpoint_url, f"environments/{environment_id}/apps")
         return self._send_request("POST", url, app_data)
 
-    def create_deployment(self, deployment_data: dict, app_id: str):
+    def create_deployment(self, deployment_data: dict, app_id: str) -> Response:
         url = urljoin(self.endpoint_url, f"apps/{app_id}/deployments")
         return self._send_request("POST", url, deployment_data)
+
+    def create_run(self, run_data: dict, app_id: str) -> Response:
+        url = urljoin(self.endpoint_url, f"apps/{app_id}/runs")
+        return self._send_request("POST", url, run_data)
+
+    def get_run(self, run_id: str) -> Response:
+        url = urljoin(self.endpoint_url, f"runs/{run_id}")
+        return self._send_request("GET", url)
+
+    def poll_run(self, run_id: str) -> None:
+        """
+        Poll a Griptape App Run on the Cloud.
+        """
+
+        run = self.get_run(run_id).json()
+        event_ids = set()
+        while run["status"] not in ["SUCCEEDED", "FAILED"]:
+            events_res = self.list_events(run_id).json()
+            if "events" in events_res and len(events_res["events"]) > 0:
+                events: [] = events_res["events"]
+                for event in list(reversed(events)):
+                    if event["event_id"] not in event_ids:
+                        echo(style(event, fg="blue"))
+                        echo("\n")
+                        event_ids.add(event["event_id"])
+            run = self.get_run(run_id).json()
+            time.sleep(2)
+
+        if run["status"] == "FAILED":
+            echo(style(run["errors"], fg="red"))
+        else:
+            echo(style(run["output"], fg="green"))
