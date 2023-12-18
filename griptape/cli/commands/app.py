@@ -54,7 +54,14 @@ def new(name: str, package_manager: str, directory: str, griptape_version: str) 
 
 
 @app.command(name="run")
-@click.option("--arg", "-a", multiple=True, type=str, required=True)
+@click.option(
+    "--arg",
+    "-a",
+    multiple=True,
+    type=str,
+    help="Argument to pass to the structure run method (Accepts multiple)",
+    required=False,
+)
 @click.option(
     "--init-param",
     "-i",
