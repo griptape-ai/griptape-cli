@@ -20,7 +20,7 @@ def configure() -> None:
     try:
         api_key = inquirer.text("Enter your Griptape Cloud API key: ").execute()
 
-        endpoint_choices = ["https://api.cloud.griptape.ai", "Other"]
+        endpoint_choices = [DEFAULT_ENDPOINT_URL, "Other"]
         endpoint_url = inquirer.select(
             message="Select the endpoint you want to use: ",
             choices=endpoint_choices,
@@ -114,7 +114,6 @@ def list_organizations(profile: str):
 @cloud.command(name="list-environments")
 @click.option(
     "--organization-id",
-    "-o",
     type=str,
     required=False,
     help="Organization ID to list environments for",
@@ -140,7 +139,6 @@ def list_environments(organization_id: str, profile: str):
 @cloud.command(name="list-apps")
 @click.option(
     "--environment-id",
-    "-n",
     type=str,
     required=False,
     help="Environment ID to list apps for",
@@ -173,7 +171,6 @@ def list_apps(environment_id: str, profile: str):
 )
 @click.option(
     "--environment-id",
-    "-v",
     type=str,
     help="Griptape Cloud environment id",
     default=None,
@@ -204,7 +201,6 @@ def create_app(
 @cloud.command(name="create-deployment")
 @click.option(
     "--app-id",
-    "-a",
     type=str,
     help="Griptape Cloud app id",
     required=True,
@@ -252,14 +248,12 @@ def create_deployment(app_id: str, directory: str, profile: str) -> None:
 @cloud.command(name="run")
 @click.option(
     "--app-id",
-    "-A",
     type=str,
     help="Griptape Cloud app id",
     required=True,
 )
 @click.option(
     "--deployment-id",
-    "-d",
     type=str,
     help="The targeted deployment id of the app to run",
     default=None,
@@ -267,7 +261,6 @@ def create_deployment(app_id: str, directory: str, profile: str) -> None:
 )
 @click.option(
     "--session-id",
-    "-s",
     type=str,
     help="The targeted session id of the app to run",
     default=None,
@@ -279,7 +272,7 @@ def create_deployment(app_id: str, directory: str, profile: str) -> None:
     "args",
     multiple=True,
     type=str,
-    help="Arguments to pass to the structure run method",
+    help="Argument to pass to the structure run method (Accepts multiple)",
     required=False,
 )
 @click.option(
@@ -288,12 +281,11 @@ def create_deployment(app_id: str, directory: str, profile: str) -> None:
     "init_params",
     type=(str, str),
     multiple=True,
-    help="Initialization parameters for the app in the format 'key value'",
+    help="Initialization parameter for the app in the format 'key value' (Accepts multiple)",
     required=False,
 )
 @click.option(
     "--no-polling",
-    "-n",
     default=False,
     is_flag=True,
     type=bool,
@@ -354,7 +346,6 @@ def run(
 @cloud.command(name="get-run")
 @click.option(
     "--run-id",
-    "-r",
     type=str,
     help="Griptape Cloud run id",
     required=True,

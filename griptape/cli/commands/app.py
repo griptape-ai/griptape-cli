@@ -59,7 +59,7 @@ def new(name: str, package_manager: str, directory: str, griptape_version: str) 
     "-a",
     multiple=True,
     type=str,
-    help="Arguments to pass to the structure run method",
+    help="Argument to pass to the structure run method (Accepts multiple)",
     required=False,
 )
 @click.option(
