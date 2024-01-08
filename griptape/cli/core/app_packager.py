@@ -52,8 +52,10 @@ class AppPackager:
         )
 
     def _create_deployment_zip_file(self, tmp_dir: str) -> str:
+        dir = os.getcwd()
+        os.chdir(tmp_dir)
         zip = shutil.make_archive("artifact", "zip", tmp_dir)
-        shutil.move(zip, tmp_dir)
+        os.chdir(dir)
         return os.path.join(tmp_dir, "artifact.zip")
 
     def _get_deployment_source(self, zip_file: str) -> str:
