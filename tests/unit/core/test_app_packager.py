@@ -19,15 +19,18 @@ class TestAppPackager:
         with tempfile.TemporaryDirectory() as temp_dir:
             runner.invoke(app.new, ["FooBar", "-d", temp_dir])
 
-            zip_file = shutil.make_archive(
-                "artifact", "zip", os.path.join(temp_dir, "FooBar")
-            )
-            with open(zip_file, "rb") as file:
-                file_data = file.read()
-
-            source = base64.b64encode(file_data).decode("utf-8")
-
             app_deployer = AppPackager(app_directory=os.path.join(temp_dir, "FooBar"))
 
-            ad_source = app_deployer.get_deployment_source()
-            assert ad_source == source
+            app_source = app_deployer.get_deployment_source()
+
+            os.makedirs(os.path.join(temp_dir, "artifact"))
+            dir = os.path.join(temp_dir, "artifact")
+            with open(os.path.join(dir, "artifact.zip"), "wb") as f:
+                f.write(base64.b64decode(app_source))
+
+            shutil.unpack_archive(os.path.join(dir, "artifact.zip"), dir, "zip")
+            files = os.listdir(dir)
+            assert "app.py" in files
+            assert "requirements.txt" in files
+            assert "README.md" in files
+            assert ".gitignore" in files

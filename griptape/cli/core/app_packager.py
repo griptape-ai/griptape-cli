@@ -3,6 +3,7 @@ import os
 import shutil
 from typing import Optional
 from attr import define, field
+from datetime import datetime
 from click import echo
 
 
@@ -44,14 +45,18 @@ class AppPackager:
                     ignore_patterns.append(line.strip())
         return shutil.copytree(
             self.app_directory,
-            os.path.join(self.app_directory, "zip_tmp"),
+            os.path.join(
+                self.app_directory, f"zip_tmp_{str(datetime.now().timestamp())}"
+            ),
             ignore=shutil.ignore_patterns(*ignore_patterns),
         )
 
     def _create_deployment_zip_file(self, tmp_dir: str) -> str:
+        dir = os.getcwd()
+        os.chdir(tmp_dir)
         zip = shutil.make_archive("artifact", "zip", tmp_dir)
-        shutil.move(zip, self.app_directory)
-        return os.path.join(self.app_directory, "artifact.zip")
+        os.chdir(dir)
+        return os.path.join(tmp_dir, "artifact.zip")
 
     def _get_deployment_source(self, zip_file: str) -> str:
         with open(zip_file, "rb") as file:
