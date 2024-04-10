@@ -1,0 +1,14 @@
+POST http://127.0.0.1:5000/api/structures/1234/runs
+Content-Type: application/json
+{
+    "structure_id": "1234",
+    "run_args": {
+        "arg1": "value1",
+        "arg2": "value2"
+    }
+}
+
+GET http://127.0.0.1:5000/
+{
+    
+}
