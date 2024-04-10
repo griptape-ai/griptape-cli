@@ -12,8 +12,7 @@ def server(ctx):
 def start() -> None:
     """Starts the Griptape server."""
     uvicorn.run(
-        "cloud_emulator.asgi:application",
-        app_dir="griptape/cli/cloud_emulator",
+        "griptape.cli.core.server:app",
         host="127.0.0.1",
         port=5000,
         log_level="info",
