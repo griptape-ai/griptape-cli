@@ -2,6 +2,10 @@ import click
 import functools
 import uvicorn
 import requests
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def server_options(func):
@@ -51,7 +55,7 @@ def structure_options(func):
         type=(str, str),
         help="Environment key-pairs for the structure",
         multiple=True,
-        default=(),
+        default=[],
         required=False,
     )
     @functools.wraps(func)
@@ -69,23 +73,18 @@ def server(ctx):
 
 @server.command(name="start")
 @server_options
-@structure_options
 def start(
     host: str,
     port: int,
-    directory: str,
-    entry_file: str,
-    environment: list[tuple[str, str]],
 ) -> None:
     """Starts the Griptape server."""
+    logger.info(f"Server started at http://{host}:{port}")
     uvicorn.run(
         "griptape.cli.core.server:app",
         host=host,
         port=port,
-        log_level="info",
         reload=True,
     )
-    register(directory, entry_file, environment)
 
 
 @server.command(name="register")
@@ -98,8 +97,10 @@ def register(
     entry_file: str,
     environment: list[tuple[str, str]],
 ) -> None:
+    logger.debug("Structure registered")
     url = f"http://{host}:{port}/api/structures"
-    requests.post(
+    logger.info(f"Registering structure: {directory}")
+    response = requests.post(
         url,
         json={
             "directory": directory,
@@ -107,6 +108,7 @@ def register(
             "environment": dict(environment),
         },
     )
+    logger.debug(response.json())
 
 
 @server.command(name="build")

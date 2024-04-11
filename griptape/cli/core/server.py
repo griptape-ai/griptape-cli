@@ -1,16 +1,20 @@
 from __future__ import annotations
-import os
-from enum import Enum
-from attrs import define, field, Factory
-from fastapi import FastAPI
-import subprocess
-from typing import Optional
-import uuid
-from pydantic import BaseModel, Field
-from dotenv import dotenv_values
 
+import logging
+import os
+import subprocess
+import uuid
+from enum import Enum
+from typing import Optional
+
+from attrs import Factory, define, field
+from dotenv import dotenv_values
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
 app = FastAPI()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Event(BaseModel):
@@ -27,6 +31,8 @@ class Run(BaseModel):
     run_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     structure: Structure = Field(default=None)
     status: Status = Field(default=Status.RUNNING)
+    args: list[str] = Field(default_factory=lambda: [])
+    env: dict = Field(default_factory=lambda: {})
     events: list[Event] = Field(default_factory=lambda: [])
     output: Optional[dict] = Field(default=None)
 
@@ -35,7 +41,7 @@ class Structure(BaseModel):
     structure_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     directory: str = Field()
     entry_file: str = Field()
-    environment: dict = Field(default_factory=lambda: {})
+    env: dict = Field(default_factory=lambda: {})
 
 
 @define
@@ -47,7 +53,7 @@ class State:
     @property
     def active_structure(self) -> Structure:
         if self._active_structure is None:
-            raise Exception("Structure not registered")
+            raise HTTPException(status_code=400, detail="Structure not registered")
         else:
             return self._active_structure
 
@@ -70,6 +76,7 @@ state = State()
 
 @app.post("/api/structures")
 def create_structure(structure: Structure) -> Structure:
+    logger.info(f"Creating structure: {structure}")
     state.register_structure(structure)
 
     build_structure(structure.structure_id)
@@ -79,9 +86,10 @@ def create_structure(structure: Structure) -> Structure:
 
 @app.post("/api/structures/{structure_id}/build")
 def build_structure(structure_id: str) -> Structure:
+    logger.info(f"Building structure: {structure_id}")
     structure = state.get_structure(structure_id)
 
-    structure.environment = dotenv_values(f"{structure.directory}/.env")
+    structure.env = dotenv_values(f"{structure.directory}/.env")
 
     subprocess.call(
         ["python", "-m", "venv", ".venv"],
@@ -96,23 +104,29 @@ def build_structure(structure_id: str) -> Structure:
 
 
 @app.post("/api/structures/{structure_id}/runs")
-def create_structure_run(structure_id: str) -> Run:
+def create_structure_run(structure_id: str, run: Run) -> Run:
+    logger.info(f"Creating run for structure: {structure_id}")
     structure = state.get_structure(structure_id)
 
-    new_run = Run()
-    state.runs[new_run.run_id] = new_run
+    state.runs[run.run_id] = run
 
     subprocess.Popen(
-        [".venv/bin/python", structure.entry_file],
+        [".venv/bin/python", structure.entry_file, *run.args],
         cwd=structure.directory,
-        env={**os.environ, **structure.environment, "GT_CLOUD_RUN_ID": new_run.run_id},
+        env={
+            **os.environ,
+            **structure.env,
+            **run.env,
+            "GT_CLOUD_RUN_ID": run.run_id,
+        },
     )
 
-    return new_run
+    return run
 
 
 @app.get("/api/structures/{structure_id}/runs")
 def list_structure_runs(structure_id: str) -> list[Run]:
+    logger.info(f"Listing runs for structure: {structure_id}")
     return [
         run for run in state.runs.values() if run.structure.structure_id == structure_id
     ]
@@ -120,6 +134,7 @@ def list_structure_runs(structure_id: str) -> list[Run]:
 
 @app.patch("/api/runs/{run_id}")
 def patch_run(run_id: str, values: dict) -> Run:
+    logger.info(f"Patching run: {run_id}")
     cur_run = state.runs[run_id].model_dump()
     new_run = Run(**(cur_run | values))
     state.runs[run_id] = new_run
@@ -129,31 +144,26 @@ def patch_run(run_id: str, values: dict) -> Run:
 
 @app.get("/api/runs/{run_id}")
 def get_run(run_id: str) -> Run:
+    logger.info(f"Getting run: {run_id}")
+
     return state.runs[run_id]
 
 
 @app.post("/api/runs/{run_id}/events")
 def create_run_event(run_id: str, event_value: dict) -> Event:
+    logger.info(f"Creating event for run: {run_id}")
     event = Event(value=event_value)
     current_run = state.runs[run_id]
     current_run.events.append(event)
 
     if event.value.get("type") == "FinishStructureRunEvent":
+        current_run.output = event.value.get("output_task_output")
         current_run.status = Run.Status.COMPLETED
-        last_task_event = next(
-            (
-                e
-                for e in reversed(current_run.events)
-                if e.value.get("type") == "FinishTaskEvent"
-            ),
-            None,
-        )
-        if last_task_event is not None:
-            current_run.output = last_task_event.value.get("task_output")
 
     return event
 
 
 @app.get("/api/runs/{run_id}/events")
 def get_run_events(run_id: str) -> list[Event]:
+    logger.info(f"Getting events for run: {run_id}")
     return state.runs[run_id].events
