@@ -24,47 +24,20 @@ CLI `cloud` commands require a [Griptape Cloud](https://www.griptape.ai/griptape
 
 ## Griptape Cloud
 
-Configure the Cloud:
+### Skatepark Emulator
+You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark. This is useful for testing and development.
 
-```shell
-poetry run gt cloud configure
+1. Start the emulator
+```
+gt cloud server start
 ```
 
-Use the cloud command to make API calls:
-
-```shell
-poetry run gt cloud list-organizations
+2. Register a structure
+```
+gt cloud server register
 ```
 
-Create an App from the template using the app command:
 
-```shell
-poetry run gt app new --directory ~/workplace demo_app
-```
-
-Test an App locally:
-
-```shell
-poetry run gt app run --directory ~/workplace/demo_app --arg "what is griptape?" --init-param "key" "value"
-```
-
-Create an App on the Cloud:
-
-```shell
-poetry run gt cloud create-app --name "Demo App"
-```
-
-Create a Deployment for the App on the Cloud using the App ID:
-
-```shell
-poetry run gt cloud create-deployment --app-id 12345678-9e29-4759-b357-dc513821c5b2 --directory ~/workplace/demo_app
-```
-
-Run an App on the Cloud using the App ID:
-
-```shell
-poetry run gt cloud run --app-id 12345678-9e29-4759-b357-dc513821c5b2 --arg "what is griptape?" --init-param "key" "value"
-```
 
 ## Documentation
 
