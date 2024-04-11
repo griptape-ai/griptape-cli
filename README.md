@@ -27,17 +27,102 @@ CLI `cloud` commands require a [Griptape Cloud](https://www.griptape.ai/griptape
 ### Skatepark Emulator
 You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark. This is useful for testing and development.
 
-1. Start the emulator
+1. Start by creating a new directory and navigating to it.
+```
+mkdir skatepark-local 
+cd skatepark-local
+```
+
+2. Create a `structure.py` file with with the following sample code.
+```python
+import os
+import sys
+
+from griptape.config import StructureConfig, StructureGlobalDriversConfig
+from griptape.drivers import (
+    GriptapeCloudEventListenerDriver,
+    OpenAiChatPromptDriver,
+)
+from griptape.events import (
+    EventListener,
+)
+from griptape.structures import Agent
+from griptape.tools import Calculator
+
+structure = Agent(
+    tools=[Calculator(off_prompt=False)],
+    config=StructureConfig(
+        global_drivers=StructureGlobalDriversConfig(
+            prompt_driver=OpenAiChatPromptDriver(
+                model="gpt-4",
+                stream=True,
+            ),
+        )
+    ),
+    event_listeners=[
+        EventListener(
+            driver=GriptapeCloudEventListenerDriver(
+                base_url="http://127.0.0.1:5000",
+                api_key=os.environ["GRIPTAPE_CLOUD_API_KEY"],
+            ),
+        )
+    ],
+)
+
+structure.run(sys.argv[1]) # Structure Run arguments are passed in via standard input. 
+```
+
+And a `requirements.txt` file with the following content.
+```
+griptape
+```
+
+3. Start the emulator.
 ```
 gt cloud server start
 ```
 
-2. Register a structure
+By default, the emulator runs on `127.0.0.1` and port `5000`. You can change these values by providing the `--host` and `--port` options.
 ```
-gt cloud server register
+gt cloud server start --host localhost --port 5001
+```
+We'll continue with the default values for the rest of this guide.
+
+4. In a separate terminal window, register a Structure.
+```
+gt cloud server register --directory skatepark-local --main-file structure.py
 ```
 
+5. Run your Structure from a separate program. Here is an example using the `requests` library.
+```python
+import requests
+import time
 
+host = "http://127.0.0.1:5000"
+
+# Start a run with the args "What is 5 ^ 2".
+# These args will be passed into our Structure program as standard input.
+response = requests.post(f"{host}/api/structures/active/runs", json={"env": {}, "args": ["What is 5 ^ 2"]})
+response.raise_for_status()
+
+# Runs are asynchronous, so we need to poll the status until it's no longer running.
+run_id = response.json()["run_id"]
+status = response.json()["status"]
+while status == "RUNNING":
+    response = requests.get(f"{host}/api/runs/{run_id}")
+    response.raise_for_status()
+    status = response.json()["status"]
+    
+    time.sleep(1) # Poll every second.
+
+output = response.json()["output"]
+print(output["value"])
+```
+
+And our output should be:
+```
+The result of 5 raised to the power of 2 is 25.
+```
 
 ## Documentation
 

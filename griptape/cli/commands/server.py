@@ -37,14 +37,14 @@ def structure_options(func):
         "--directory",
         "-d",
         type=str,
-        help="Directory containing the structure to register",
+        help="Directory containing the Structure to register",
         default=".",
         required=False,
     )
     @click.option(
-        "--entry-file",
+        "--main-file",
         type=str,
-        help="Entry file for the structure",
+        help="Main file for the Structure",
         default="structure.py",
         required=False,
     )
@@ -53,7 +53,7 @@ def structure_options(func):
         "--environment",
         "-e",
         type=(str, str),
-        help="Environment key-pairs for the structure",
+        help="Environment key-pairs for the Structure",
         multiple=True,
         default=[],
         required=False,
@@ -94,7 +94,7 @@ def register(
     host: str,
     port: int,
     directory: str,
-    entry_file: str,
+    main_file: str,
     environment: list[tuple[str, str]],
 ) -> None:
     logger.debug("Structure registered")
@@ -104,7 +104,7 @@ def register(
         url,
         json={
             "directory": directory,
-            "entry_file": entry_file,
+            "main_file": main_file,
             "environment": dict(environment),
         },
     )
