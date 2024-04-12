@@ -24,46 +24,104 @@ CLI `cloud` commands require a [Griptape Cloud](https://www.griptape.ai/griptape
 
 ## Griptape Cloud
 
-Configure the Cloud:
+### Skatepark Emulator
+You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark. This is useful for testing and development.
 
-```shell
-poetry run gt cloud configure
+1. Start by creating a new directory and navigating to it.
+```
+mkdir skatepark-local 
+cd skatepark-local
 ```
 
-Use the cloud command to make API calls:
+2. Create a `structure.py` file with with the following sample code.
+```python
+import os
+import sys
 
-```shell
-poetry run gt cloud list-organizations
+from griptape.config import StructureConfig, StructureGlobalDriversConfig
+from griptape.drivers import (
+    GriptapeCloudEventListenerDriver,
+    OpenAiChatPromptDriver,
+)
+from griptape.events import (
+    EventListener,
+)
+from griptape.structures import Agent
+from griptape.tools import Calculator
+
+structure = Agent(
+    tools=[Calculator(off_prompt=False)],
+    config=StructureConfig(
+        global_drivers=StructureGlobalDriversConfig(
+            prompt_driver=OpenAiChatPromptDriver(
+                model="gpt-4",
+                stream=True,
+            ),
+        )
+    ),
+    event_listeners=[
+        EventListener(
+            driver=GriptapeCloudEventListenerDriver(
+                base_url="http://127.0.0.1:5000",
+                api_key=os.environ["GRIPTAPE_CLOUD_API_KEY"],
+            ),
+        )
+    ],
+)
+
+structure.run(sys.argv[1]) # Structure Run arguments are passed in via standard input. 
 ```
 
-Create an App from the template using the app command:
-
-```shell
-poetry run gt app new --directory ~/workplace demo_app
+And a `requirements.txt` file with the following content.
+```
+griptape
 ```
 
-Test an App locally:
-
-```shell
-poetry run gt app run --directory ~/workplace/demo_app --arg "what is griptape?" --init-param "key" "value"
+3. Start the emulator.
+```
+gt cloud server start
 ```
 
-Create an App on the Cloud:
+By default, the emulator runs on `127.0.0.1` and port `5000`. You can change these values by providing the `--host` and `--port` options.
+```
+gt cloud server start --host localhost --port 5001
+```
+We'll continue with the default values for the rest of this guide.
 
-```shell
-poetry run gt cloud create-app --name "Demo App"
+4. In a separate terminal window, register a Structure.
+```
+gt cloud server register --directory skatepark-local --main-file structure.py
 ```
 
-Create a Deployment for the App on the Cloud using the App ID:
+5. Run your Structure from a separate program. Here is an example using the `requests` library.
+```python
+import requests
+import time
 
-```shell
-poetry run gt cloud create-deployment --app-id 12345678-9e29-4759-b357-dc513821c5b2 --directory ~/workplace/demo_app
+host = "http://127.0.0.1:5000"
+
+# Start a run with the args "What is 5 ^ 2".
+# These args will be passed into our Structure program as standard input.
+response = requests.post(f"{host}/api/structures/active/runs", json={"env": {}, "args": ["What is 5 ^ 2"]})
+response.raise_for_status()
+
+# Runs are asynchronous, so we need to poll the status until it's no longer running.
+run_id = response.json()["run_id"]
+status = response.json()["status"]
+while status == "RUNNING":
+    response = requests.get(f"{host}/api/runs/{run_id}")
+    response.raise_for_status()
+    status = response.json()["status"]
+    
+    time.sleep(1) # Poll every second.
+
+output = response.json()["output"]
+print(output["value"])
 ```
 
-Run an App on the Cloud using the App ID:
-
-```shell
-poetry run gt cloud run --app-id 12345678-9e29-4759-b357-dc513821c5b2 --arg "what is griptape?" --init-param "key" "value"
+And our output should be:
+```
+The result of 5 raised to the power of 2 is 25.
 ```
 
 ## Documentation
