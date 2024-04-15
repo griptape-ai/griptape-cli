@@ -80,7 +80,7 @@ def start(
     """Starts the Griptape server."""
     logger.info(f"Server started at http://{host}:{port}")
     uvicorn.run(
-        "griptape.cli.core.server:app",
+        "griptapecli.core.server:app",
         host=host,
         port=port,
         reload=True,
@@ -108,7 +108,7 @@ def register(
             "environment": dict(environment),
         },
     )
-    logger.debug(response.json())
+    logger.info(response.text)
 
 
 @server.command(name="build")
