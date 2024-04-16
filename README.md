@@ -48,10 +48,38 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
    ```bash
    gt server register --directory . --main-file structure.py
    ```
-5. Now that your Structure is registered, call the emulator's API to run the Structure.
+
+   The example client program uses the environment variable `GT_ACTIVE_STRUCTURE_ID` to determine which Structure to run.
+   Set this environment variable to the Structure ID you registered in the previous step.
+   ```bash
+   export GT_ACTIVE_STRUCTURE_ID={STRUCTURE_ID}
+   ```
+
+   Or you can register and set the environment variable in one step.
+   ```bash
+   export GT_ACTIVE_STRUCTURE_ID=$(gt server register --directory . --main-file structure.py)
+   ```
+
+> [!IMPORTANT]
+> Structures registered with the emulator are not persisted across restarts. You will need to re-register the Structure each time you restart the emulator.
+5. Confirm that the Structure is registered.
+   ```bash
+   gt server list
+   ```
+6. Add your OPENAI_API_KEY to the `.env` file.
+   ```bash
+   echo "OPENAI_API_KEY=sk-XXXXXX-XXXXXX-XXXXXX-XXXXXX" >> .env
+   ```
+7. Rebuild the structure to load in the new environment variable. 
+   Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild. 
+   ```bash
+   gt server build --structure-id {STRUCTURE_ID}
+   ```
+8. Now that your Structure is registered, use the example client program to call the emulator's API for running the Structure.
     ```bash
     poetry run python app.py
     ```
+
 
 ## Documentation
 

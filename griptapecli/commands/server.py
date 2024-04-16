@@ -94,7 +94,6 @@ def register(
 ) -> None:
     url = f"http://{host}:{port}/api/structures"
     directory = directory.rstrip("/")
-    click.echo(f"Registering structure: {directory}/{main_file}")
     response = requests.post(
         url,
         json={
@@ -107,7 +106,7 @@ def register(
 
     structure_id = response.json()["structure_id"]
 
-    click.echo(f"Structure registered with id: {structure_id}")
+    click.echo(structure_id)
 
 
 @server.command(name="build")
@@ -117,8 +116,7 @@ def register(
     "-s",
     type=str,
     help="Id of the Structure to build",
-    default="active",
-    required=False,
+    required=True,
 )
 def build(
     host: str,
