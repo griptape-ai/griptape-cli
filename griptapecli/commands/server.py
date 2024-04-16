@@ -83,7 +83,7 @@ def start(
         "griptapecli.core.server:app",
         host=host,
         port=port,
-        reload=True,
+        reload=False,
     )
 
 
