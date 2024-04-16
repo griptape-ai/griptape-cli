@@ -1,3 +1,4 @@
+import os
 import click
 import functools
 import uvicorn
@@ -117,6 +118,9 @@ def register(
     type=str,
     help="Id of the Structure to build",
     required=True,
+    prompt=True,
+    default=lambda: os.environ.get("GT_CLOUD_STRUCTURE_ID", ""),
+    show_default="GT_CLOUD_STRUCTURE_ID environment variable",
 )
 def build(
     host: str,
@@ -162,6 +166,9 @@ def list_structures(
     type=str,
     help="Id of the Structure to remove",
     required=True,
+    prompt=True,
+    default=lambda: os.environ.get("GT_CLOUD_STRUCTURE_ID", ""),
+    show_default="GT_CLOUD_STRUCTURE_ID environment variable",
 )
 def remove_structure(
     host: str,
