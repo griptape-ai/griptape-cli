@@ -4,7 +4,7 @@ import uuid
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class Event(BaseModel):
@@ -30,7 +30,13 @@ class Run(BaseModel):
 
 
 class Structure(BaseModel):
-    structure_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     directory: str = Field()
     main_file: str = Field()
     env: dict = Field(default_factory=lambda: {})
+
+    @computed_field
+    @property
+    def structure_id(self) -> str:
+        path = f'{self.directory.rstrip("/")}/{self.main_file}'
+
+        return uuid.uuid5(uuid.NAMESPACE_URL, path).hex
