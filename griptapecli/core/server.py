@@ -28,6 +28,20 @@ def create_structure(structure: Structure) -> Structure:
     return structure
 
 
+@app.get("/api/structures")
+def list_structures() -> list[Structure]:
+    logger.info("Listing structures")
+
+    return list(state.structures.values())
+
+
+@app.delete("/api/structures/{structure_id}")
+def delete_structure(structure_id: str) -> str:
+    logger.info(f"Deleting structure: {structure_id}")
+
+    return state.remove_structure(structure_id)
+
+
 @app.post("/api/structures/{structure_id}/build")
 def build_structure(structure_id: str) -> Structure:
     logger.info(f"Building structure: {structure_id}")

@@ -2,10 +2,6 @@ import click
 import functools
 import uvicorn
 import requests
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def server_options(func):
@@ -78,7 +74,6 @@ def start(
     port: int,
 ) -> None:
     """Starts the Griptape server."""
-    logger.info(f"Server started at http://{host}:{port}")
     uvicorn.run(
         "griptapecli.core.server:app",
         host=host,
@@ -97,9 +92,9 @@ def register(
     main_file: str,
     environment: list[tuple[str, str]],
 ) -> None:
-    logger.debug("Structure registered")
     url = f"http://{host}:{port}/api/structures"
-    logger.info(f"Registering structure: {directory}")
+    directory = directory.rstrip("/")
+    click.echo(f"Registering structure: {directory}/{main_file}")
     response = requests.post(
         url,
         json={
@@ -108,7 +103,11 @@ def register(
             "environment": dict(environment),
         },
     )
-    logger.info(response.text)
+    response.raise_for_status()
+
+    structure_id = response.json()["structure_id"]
+
+    click.echo(f"Structure registered with id: {structure_id}")
 
 
 @server.command(name="build")
@@ -127,7 +126,52 @@ def build(
     structure_id: str,
 ) -> None:
     url = f"http://{host}:{port}/api/structures/{structure_id}/build"
-    requests.post(
+    response = requests.post(
         url,
         json={},
     )
+    response.raise_for_status()
+
+    click.echo(f"Structure built: {structure_id}")
+
+
+@server.command(name="list")
+@server_options
+def list_structures(
+    host: str,
+    port: int,
+) -> None:
+    url = f"http://{host}:{port}/api/structures"
+    response = requests.get(url)
+    response.raise_for_status()
+
+    structures = response.json()
+    if structures:
+        for structure in structures:
+            structure_id = structure["structure_id"]
+            directory = structure["directory"].rstrip("/")
+            main_file = structure["main_file"]
+            click.echo(f"{structure_id} -> {directory}/{main_file}")
+    else:
+        click.echo("No structures registered")
+
+
+@server.command(name="remove")
+@server_options
+@click.option(
+    "--structure-id",
+    "-s",
+    type=str,
+    help="Id of the Structure to remove",
+    required=True,
+)
+def remove_structure(
+    host: str,
+    port: int,
+    structure_id: str,
+) -> None:
+    url = f"http://{host}:{port}/api/structures/{structure_id}"
+    response = requests.delete(url)
+    response.raise_for_status()
+
+    click.echo(f"Structure removed: {structure_id}")
