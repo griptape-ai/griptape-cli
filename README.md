@@ -86,9 +86,6 @@ Use Skatepark to develop, test, and validate that your program will operate as e
     ```
 8. Now that your Structure is registered and built with environment variables, use the example client program to call Skatepark's API for running the Structure.
 
-> [!IMPORTANT]
-> The client program is an _example_ for how to interact with the Managed Structure's API. It is useful for testing your Managed Structure locally, but ultimately you will want to integrate your Managed Structure with your own application. 
-
     Navigate to the `example-client` directory.
     ```bash
     cd example-client
@@ -106,6 +103,8 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 
     You should see the result of the Structure answering `What is 123 * 34, 23 / 12.3, and 9 ^ 4`, indicating a successful run. 
 
+> [!IMPORTANT]
+> The client program is an _example_ for how to interact with the Managed Structure's API. It is useful for testing your Managed Structure locally, but ultimately you will want to integrate your Managed Structure with your own application. 
 
 ## Documentation
 
