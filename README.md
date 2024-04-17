@@ -9,9 +9,9 @@ The Griptape CLI is a command-line interface for interacting with features of [G
 Today, it provides an emulator for Griptape Cloud Managed Structures, which allows you to run and test your Managed Structures locally. 
 
 ## Prerequisites
-    - A GitHub account.
-    - Python 3.11.
-    - [Poetry](https://python-poetry.org/) for running the example client program.
+- A GitHub account.
+- Python 3.11.
+- [Poetry](https://python-poetry.org) for running the example client program.
 
 ## Installation 
 
