@@ -5,7 +5,8 @@
 [![Docs](https://readthedocs.org/projects/griptape/badge/)](https://griptape.readthedocs.io/)
 [![Griptape Discord](https://dcbadge.vercel.app/api/server/gnWRz88eym?compact=true&style=flat)](https://discord.gg/gnWRz88eym)
 
-CLI for the Griptape Framework and Cloud.
+The Griptape CLI is a command-line interface for interacting with features of [Griptape Cloud](https://www.griptape.ai/cloud).
+Today, it provides an emulator for Griptape Cloud Skatepark, which allows you to run and test your Structures locally. 
 
 ## Installation 
 
@@ -32,6 +33,10 @@ CLI for the Griptape Framework and Cloud.
 You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark. This is useful for testing and development.
 
 1. Start by creating a new repository from the [Managed Structure Template](https://github.com/griptape-ai/managed-structure-template).
+ a. Make sure you're logged in to GitHub
+ b. Go to the [Managed Structure Template repo](https://github.com/griptape-ai/managed-structure-template)
+ c. Click *Use this template*
+ d. Choose *Create a new repository*
 2. Clone the repository and navigate to the root directory.
     ```bash
     git clone https://github.com/{YOUR_GITHUB_ID}/managed-structure-template
@@ -66,7 +71,7 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
    ```bash
    gt server list
    ```
-6. Add your OPENAI_API_KEY to the `.env` file.
+6. Add your OPENAI_API_KEY to the `.env` file. You can also add other environment variables here.
    ```bash
    echo "OPENAI_API_KEY=sk-XXXXXX-XXXXXX-XXXXXX-XXXXXX" >> .env
    ```
