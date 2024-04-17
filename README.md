@@ -73,7 +73,7 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
 7. Rebuild the structure to load in the new environment variable. 
    Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild. 
    ```bash
-   gt server build --structure-id {STRUCTURE_ID}
+   gt server build
    ```
 8. Now that your Structure is registered, use the example client program to call the emulator's API for running the Structure.
     ```bash
