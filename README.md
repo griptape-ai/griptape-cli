@@ -6,7 +6,7 @@
 [![Griptape Discord](https://dcbadge.vercel.app/api/server/gnWRz88eym?compact=true&style=flat)](https://discord.gg/gnWRz88eym)
 
 The Griptape CLI is a command-line interface for interacting with features of [Griptape Cloud](https://www.griptape.ai/cloud).
-Today, it provides an emulator for Griptape Cloud Skatepark, which allows you to run and test your Structures locally. 
+Today, it provides an emulator for Griptape Cloud Managed Structures, which allows you to run and test your Managed Structures locally. 
 
 ## Prerequisites
     - A GitHub account.
@@ -33,9 +33,9 @@ Today, it provides an emulator for Griptape Cloud Skatepark, which allows you to
     gt --help
     ```
 
-## Skatepark
-You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
-Use the Skatepark emulator to develop, test, and validate that your program will operate as expected when deployed as a Griptape Cloud Manage Structure.
+## Skatepark Emulator
+You can use the CLI to spin up Skatepark, a local emulator for Griptape Cloud Managed Structures. It exposes an API that is identical to the one you would interact with when running your Managed Structure in Griptape Cloud.
+Use Skatepark to develop, test, and validate that your program will operate as expected when deployed as a Griptape Cloud Managed Structure. Skatepark gives you confidence that when you bring your Structure into Griptape Cloud as a Managed Structure, it will continue to operate as expected, at scale.
 
 1. Start by creating a new repository in your own Github account from the [Managed Structure Template](https://github.com/griptape-ai/managed-structure-template).
     a. Make sure you're logged in to GitHub.
@@ -45,8 +45,8 @@ Use the Skatepark emulator to develop, test, and validate that your program will
     e. Provide a name for the new repository and (optionally) a description.
     f. Press the *Create repository* button.
     g. You now have a repository in your own GitHub account that is a copy of the Managed Structure Template for you to begin working with.
-2. Clone your newly-created repository to a directory in your local development environment so that you can begin authoring your own Griptape Managed Structure.
-3. Start the Skatepark emulator.
+2. Clone your newly-created repository to a directory in your local development environment so that you can begin authoring your own Griptape Cloud Managed Structure.
+3. Start Skatepark.
     ```bash
     gt skatepark start
     ```
@@ -68,23 +68,26 @@ Use the Skatepark emulator to develop, test, and validate that your program will
     ```
 
 > [!IMPORTANT]
-> Structures registered with the emulator are not persisted across restarts. You will need to re-register the Structure each time you restart the emulator.
+> Structures registered with the Skatepark are not persisted across restarts. You will need to re-register the Structure each time you restart Skatepark.
 5. Confirm that the Structure is registered.
     ```bash
     gt skatepark list
     ```
-    You should see a list of registered Structures and the directories they point to, confirming that your Managed Structure was properly registered
+    You should see a list of registered Structures and the directories they point to, confirming that your Structure was properly registered
 6. You can load environment variables into your Structure by creating an `.env` file in the directory of the Structure you registered. 
     a. Create a file named `.env` in the `structure/` directory.
-    b. Open the `.env` file in a text editor
+    b. Open the `.env` file in a text editor.
     c. The template expects an `OPENAI_API_KEY` environment variable by default to function. Add OPENAI_API_KEY=_your OpenAI API Key here_ to the `.env` file and save it.
-    d. Add any other environment variables your Structure depends on as you expand the template.
+    d. As you expand on the template, you may add any other environment variables your Structure depends on to this file.
 7. Rebuild the structure to load in the new environment variable. 
     Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild. 
     ```bash
     gt skatepark build
     ```
-8. Now that your Structure is registered and built with environment variables, use the example program to call the Skatepark emulator's API for running the Structure. Skatepark gives you confidence that when you bring your program into Griptape Cloud as a Managed Structure, it will continue to operate as expected, at scale.
+8. Now that your Structure is registered and built with environment variables, use the example client program to call Skatepark's API for running the Structure.
+
+> [!IMPORTANT]
+> The client program is an _example_ for how to interact with the Managed Structure's API. It is useful for testing your Managed Structure locally, but ultimately you will want to integrate your Managed Structure with your own application. 
 
     Navigate to the `example-client` directory.
     ```bash
