@@ -60,8 +60,8 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
    export GT_STRUCTURE_ID=$(gt server register --directory . --main-file structure.py)
    ```
 
-   > [!IMPORTANT]
-   > Structures registered with the emulator are not persisted across restarts. You will need to re-register the Structure each time you restart the emulator.
+> [!IMPORTANT]
+> Structures registered with the emulator are not persisted across restarts. You will need to re-register the Structure each time you restart the emulator.
 5. Confirm that the Structure is registered.
    ```bash
    gt server list
