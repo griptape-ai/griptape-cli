@@ -49,15 +49,15 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
    gt server register --directory . --main-file structure.py
    ```
 
-   The example client program uses the environment variable `GT_ACTIVE_STRUCTURE_ID` to determine which Structure to run.
+   The example client program uses the environment variable `GT_STRUCTURE_ID` to determine which Structure to run.
    Set this environment variable to the Structure ID you registered in the previous step.
    ```bash
-   export GT_ACTIVE_STRUCTURE_ID={STRUCTURE_ID}
+   export GT_STRUCTURE_ID={STRUCTURE_ID}
    ```
 
    Or you can register and set the environment variable in one step.
    ```bash
-   export GT_ACTIVE_STRUCTURE_ID=$(gt server register --directory . --main-file structure.py)
+   export GT_STRUCTURE_ID=$(gt server register --directory . --main-file structure.py)
    ```
 
    > [!IMPORTANT]
