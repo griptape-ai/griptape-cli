@@ -93,7 +93,7 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 
     Install the dependencies required by the example client program.
     ```bash
-    poetry install
+    poetry install --no-root
     ```
 
     Run the example client program.
