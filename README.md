@@ -76,9 +76,16 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
    gt server build
    ```
 8. Now that your Structure is registered, use the example client program to call the emulator's API for running the Structure.
-    ```bash
-    poetry run python app.py
-    ```
+
+   Install the dependencies required by the example client program.
+   ```bash
+   poetry install
+   ```
+
+   Run the example client program.
+   ```bash
+   poetry run python app.py
+   ```
 
 
 ## Documentation
