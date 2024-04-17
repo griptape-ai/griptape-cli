@@ -94,7 +94,7 @@ def register(
     environment: list[tuple[str, str]],
 ) -> None:
     url = f"http://{host}:{port}/api/structures"
-    directory = os.path.abspath(directory.rstrip("/"))
+    directory = os.path.abspath(directory)
     response = requests.post(
         url,
         json={
@@ -151,7 +151,7 @@ def list_structures(
     if structures:
         for structure in structures:
             structure_id = structure["structure_id"]
-            directory = structure["directory"].rstrip("/")
+            directory = structure["directory"]
             main_file = structure["main_file"]
             click.echo(f"{structure_id} -> {directory}/{main_file}")
     else:

@@ -37,6 +37,6 @@ class Structure(BaseModel):
     @computed_field
     @property
     def structure_id(self) -> str:
-        path = f'{self.directory.rstrip("/")}/{self.main_file}'
+        path = f"{self.directory}/{self.main_file}"
 
         return uuid.uuid5(uuid.NAMESPACE_URL, path).hex
