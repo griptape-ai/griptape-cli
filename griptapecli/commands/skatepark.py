@@ -10,7 +10,7 @@ def server_options(func):
         "--host",
         "-h",
         type=str,
-        help="Host to run the server on",
+        help="Host to run the Skatepark emulator on",
         default="127.0.0.1",
         required=False,
     )
@@ -18,7 +18,7 @@ def server_options(func):
         "--port",
         "-p",
         type=int,
-        help="Port to run the server on",
+        help="Port to run the Skatepark emulator on",
         default=5000,
         required=False,
     )
@@ -64,11 +64,11 @@ def structure_options(func):
 
 @click.group()
 @click.pass_context
-def server(ctx):
+def skatepark(ctx):
     pass
 
 
-@server.command(name="start")
+@skatepark.command(name="start")
 @server_options
 def start(
     host: str,
@@ -76,14 +76,14 @@ def start(
 ) -> None:
     """Starts the Griptape server."""
     uvicorn.run(
-        "griptapecli.core.server:app",
+        "griptapecli.core.skatepark:app",
         host=host,
         port=port,
         reload=False,
     )
 
 
-@server.command(name="register")
+@skatepark.command(name="register")
 @server_options
 @structure_options
 def register(
@@ -110,7 +110,7 @@ def register(
     click.echo(structure_id)
 
 
-@server.command(name="build")
+@skatepark.command(name="build")
 @server_options
 @click.option(
     "--structure-id",
@@ -137,7 +137,7 @@ def build(
     click.echo(f"Structure built: {structure_id}")
 
 
-@server.command(name="list")
+@skatepark.command(name="list")
 @server_options
 def list_structures(
     host: str,
@@ -158,7 +158,7 @@ def list_structures(
         click.echo("No structures registered")
 
 
-@server.command(name="remove")
+@skatepark.command(name="remove")
 @server_options
 @click.option(
     "--structure-id",
