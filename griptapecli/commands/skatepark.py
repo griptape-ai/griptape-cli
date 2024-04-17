@@ -103,7 +103,12 @@ def register(
             "environment": dict(environment),
         },
     )
-    response.raise_for_status()
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        click.echo(f"HTTP Error: {e.response.text}")
+        return
 
     structure_id = response.json()["structure_id"]
 
@@ -132,7 +137,11 @@ def build(
         url,
         json={},
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        click.echo(f"HTTP Error: {e.response.text}")
+        return
 
     click.echo(f"Structure built: {structure_id}")
 
@@ -145,7 +154,12 @@ def list_structures(
 ) -> None:
     url = f"http://{host}:{port}/api/structures"
     response = requests.get(url)
-    response.raise_for_status()
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        click.echo(f"HTTP Error: {e.response.text}")
+        return
 
     structures = response.json()
     if structures:
@@ -153,7 +167,8 @@ def list_structures(
             structure_id = structure["structure_id"]
             directory = structure["directory"]
             main_file = structure["main_file"]
-            click.echo(f"{structure_id} -> {directory}/{main_file}")
+            env = structure["env"]
+            click.echo(f"{structure_id} -> {directory}/{main_file} ({env})")
     else:
         click.echo("No structures registered")
 
@@ -177,6 +192,11 @@ def remove_structure(
 ) -> None:
     url = f"http://{host}:{port}/api/structures/{structure_id}"
     response = requests.delete(url)
-    response.raise_for_status()
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        click.echo(f"HTTP Error: {e.response.text}")
+        return
 
     click.echo(f"Structure removed: {structure_id}")

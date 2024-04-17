@@ -5,7 +5,7 @@ import os
 import subprocess
 
 from dotenv import dotenv_values
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from .models import Event, Run, Structure
 from .state import State, RunProcess
@@ -47,6 +47,9 @@ def build_structure(structure_id: str) -> Structure:
     logger.info(f"Building structure: {structure_id}")
     structure = state.get_structure(structure_id)
 
+    if not os.path.exists(structure.directory):
+        raise HTTPException(status_code=400, detail="Directory does not exist")
+
     structure.env = dotenv_values(f"{structure.directory}/.env")
 
     subprocess.call(
@@ -65,6 +68,12 @@ def build_structure(structure_id: str) -> Structure:
 def create_structure_run(structure_id: str, run: Run) -> Run:
     logger.info(f"Creating run for structure: {structure_id}")
     structure = state.get_structure(structure_id)
+
+    if not os.path.exists(structure.directory):
+        raise HTTPException(status_code=400, detail="Directory does not exist")
+
+    if not os.path.exists(f"{structure.directory}/{structure.main_file}"):
+        raise HTTPException(status_code=400, detail="Main file does not exist")
 
     process = subprocess.Popen(
         [".venv/bin/python3", structure.main_file, *run.args],
