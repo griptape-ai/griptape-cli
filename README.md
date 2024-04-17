@@ -76,7 +76,7 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
     ```
 6. Add your OPENAI_API_KEY to the `.env` file. You can also add other environment variables here.
     ```bash
-    echo "OPENAI_API_KEY=sk-XXXXXX-XXXXXX-XXXXXX-XXXXXX" >> .env
+    echo "OPENAI_API_KEY=sk-XXXXXX-XXXXXX-XXXXXX-XXXXXX" >> structure/.env
     ```
 7. Rebuild the structure to load in the new environment variable. 
     Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild. 
@@ -97,7 +97,7 @@ You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark.
 
     Run the example client program.
     ```bash
-    poetry run python app.py
+    poetry run python client.py
     ```
 
 
