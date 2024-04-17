@@ -21,9 +21,14 @@ state = State()
 @app.post("/api/structures")
 def create_structure(structure: Structure) -> Structure:
     logger.info(f"Creating structure: {structure}")
-    state.register_structure(structure)
 
-    build_structure(structure.structure_id)
+    state.register_structure(structure)
+    try:
+        build_structure(structure.structure_id)
+    except HTTPException as e:
+        state.remove_structure(structure.structure_id)
+
+        raise HTTPException(status_code=400, detail=str(e))
 
     return structure
 
