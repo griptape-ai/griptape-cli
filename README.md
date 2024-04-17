@@ -38,13 +38,13 @@ You can use the CLI to spin up Skatepark, a local emulator for Griptape Cloud Ma
 Use Skatepark to develop, test, and validate that your program will operate as expected when deployed as a Griptape Cloud Managed Structure. Skatepark gives you confidence that when you bring your Structure into Griptape Cloud as a Managed Structure, it will continue to operate as expected, at scale.
 
 1. Start by creating a new repository in your own Github account from the [Managed Structure Template](https://github.com/griptape-ai/managed-structure-template).
-    a. Make sure you're logged in to GitHub.
-    b. Go to the [Managed Structure Template repo](https://github.com/griptape-ai/managed-structure-template).
-    c. Select the *Use this template* drop-down.
-    d. Choose *Create a new repository*.
-    e. Provide a name for the new repository and (optionally) a description.
-    f. Press the *Create repository* button.
-    g. You now have a repository in your own GitHub account that is a copy of the Managed Structure Template for you to begin working with.
+    1. Make sure you're logged in to GitHub.
+    2. Go to the [Managed Structure Template repo](https://github.com/griptape-ai/managed-structure-template).
+    3. Select the *Use this template* drop-down.
+    4. Choose *Create a new repository*.
+    5. Provide a name for the new repository and (optionally) a description.
+    6. Press the *Create repository* button.
+    7. You now have a repository in your own GitHub account that is a copy of the Managed Structure Template for you to begin working with.
 2. Clone your newly-created repository to a directory in your local development environment so that you can begin authoring your own Griptape Cloud Managed Structure.
 3. Start Skatepark.
     ```bash
@@ -75,10 +75,10 @@ Use Skatepark to develop, test, and validate that your program will operate as e
     ```
     You should see a list of registered Structures and the directories they point to, confirming that your Structure was properly registered
 6. You can load environment variables into your Structure by creating an `.env` file in the directory of the Structure you registered. 
-    a. Create a file named `.env` in the `structure/` directory.
-    b. Open the `.env` file in a text editor.
-    c. The template expects an `OPENAI_API_KEY` environment variable by default to function. Add OPENAI_API_KEY=_your OpenAI API Key here_ to the `.env` file and save it.
-    d. As you expand on the template, you may add any other environment variables your Structure depends on to this file.
+    1. Create a file named `.env` in the `structure/` directory.
+    2. Open the `.env` file in a text editor.
+    3. The template expects an `OPENAI_API_KEY` environment variable by default to function. Add OPENAI_API_KEY=_your OpenAI API Key here_ to the `.env` file and save it.
+    4. As you expand on the template, you may add any other environment variables your Structure depends on to this file.
 7. Rebuild the structure to load in the new environment variable. 
     Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild. 
     ```bash
