@@ -50,11 +50,11 @@ def build_structure(structure_id: str) -> Structure:
     structure.env = dotenv_values(f"{structure.directory}/.env")
 
     subprocess.call(
-        ["python", "-m", "venv", ".venv"],
+        ["python3", "-m", "venv", ".venv"],
         cwd=structure.directory,
     )
     subprocess.call(
-        [".venv/bin/pip", "install", "-r", "requirements.txt"],
+        [".venv/bin/pip3", "install", "-r", "requirements.txt"],
         cwd=structure.directory,
     )
 
@@ -67,7 +67,7 @@ def create_structure_run(structure_id: str, run: Run) -> Run:
     structure = state.get_structure(structure_id)
 
     process = subprocess.Popen(
-        [".venv/bin/python", structure.main_file, *run.args],
+        [".venv/bin/python3", structure.main_file, *run.args],
         cwd=structure.directory,
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
