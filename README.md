@@ -8,6 +8,10 @@
 The Griptape CLI is a command-line interface for interacting with features of [Griptape Cloud](https://www.griptape.ai/cloud).
 Today, it provides an emulator for Griptape Cloud Skatepark, which allows you to run and test your Structures locally. 
 
+## Prerequisites
+    - A GitHub account
+    - Python 3.9 or later
+
 ## Installation 
 
 1. Install griptape-cli
@@ -32,10 +36,10 @@ Today, it provides an emulator for Griptape Cloud Skatepark, which allows you to
 You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark. This is useful for testing and development.
 
 1. Start by creating a new repository from the [Managed Structure Template](https://github.com/griptape-ai/managed-structure-template).
- a. Make sure you're logged in to GitHub
- b. Go to the [Managed Structure Template repo](https://github.com/griptape-ai/managed-structure-template)
- c. Click *Use this template*
- d. Choose *Create a new repository*
+    a. Make sure you're logged in to GitHub
+    b. Go to the [Managed Structure Template repo](https://github.com/griptape-ai/managed-structure-template)
+    c. Click *Use this template*
+    d. Choose *Create a new repository*
 2. Clone the repository and navigate to the root directory.
     ```bash
     git clone https://github.com/{YOUR_GITHUB_ID}/managed-structure-template
