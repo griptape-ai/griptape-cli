@@ -1,6 +1,6 @@
 import click
 
-from griptapecli.commands.server import server
+from griptapecli.commands.skatepark import skatepark
 
 
 @click.group()
@@ -9,4 +9,4 @@ def cli(ctx):
     ctx.obj = {}
 
 
-cli.add_command(server)
+cli.add_command(skatepark)

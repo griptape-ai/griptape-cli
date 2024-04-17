@@ -1,128 +1,111 @@
-# griptape-cli
+# Griptape Cloud CLI
 
 [![PyPI Version](https://img.shields.io/pypi/v/griptape-cli.svg)](https://pypi.python.org/pypi/griptape-cli)
 [![Tests](https://github.com/griptape-ai/griptape-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/griptape-ai/griptape-cli/actions/workflows/tests.yml)
 [![Docs](https://readthedocs.org/projects/griptape/badge/)](https://griptape.readthedocs.io/)
 [![Griptape Discord](https://dcbadge.vercel.app/api/server/gnWRz88eym?compact=true&style=flat)](https://discord.gg/gnWRz88eym)
 
-CLI for the Griptape Framework and Cloud.
+The Griptape CLI is a command-line interface for interacting with features of [Griptape Cloud](https://www.griptape.ai/cloud).
+Today, it provides an emulator for Griptape Cloud Managed Structures, which allows you to run and test your Managed Structures locally. 
 
 ## Prerequisites
+    - A GitHub account.
+    - Python 3.11.
+    - [Poetry](https://python-poetry.org/) for running the example client program.
 
-CLI `cloud` commands require a [Griptape Cloud](https://www.griptape.ai/griptape-cloud/) account.
-
-## Quick Start
+## Installation 
 
 1. Install griptape-cli
-   ```
-   pipx install griptape-cli
-   ```
-1. Verify installation
-   ```
-   gt --help
-   ```
+    ```bash
+    pipx install griptape-cli
+    ```
 
-## Griptape Cloud
+   You can also install a pre-release version from GitHub.
+    ```bash
+    git clone https://github.com/griptape-ai/griptape-cli.git
+    ```
 
-### Skatepark Emulator
-You can use the CLI to spin up a local emulator of the Griptape Cloud Skatepark. This is useful for testing and development.
+    ```bash
+    pipx install ./griptape-cli
+    ```
+2. Verify installation
+    ```bash
+    gt --help
+    ```
 
-1. Start by creating a new directory and navigating to it.
-```
-mkdir skatepark-local 
-cd skatepark-local
-```
+## Skatepark Emulator
+You can use the CLI to spin up Skatepark, a local emulator for Griptape Cloud Managed Structures. It exposes an API that is identical to the one you would interact with when running your Managed Structure in Griptape Cloud.
+Use Skatepark to develop, test, and validate that your program will operate as expected when deployed as a Griptape Cloud Managed Structure. Skatepark gives you confidence that when you bring your Structure into Griptape Cloud as a Managed Structure, it will continue to operate as expected, at scale.
 
-2. Create a `structure.py` file with with the following sample code.
-```python
-import os
-import sys
+1. Start by creating a new repository in your own Github account from the [Managed Structure Template](https://github.com/griptape-ai/managed-structure-template).
+    a. Make sure you're logged in to GitHub.
+    b. Go to the [Managed Structure Template repo](https://github.com/griptape-ai/managed-structure-template).
+    c. Select the *Use this template* drop-down.
+    d. Choose *Create a new repository*.
+    e. Provide a name for the new repository and (optionally) a description.
+    f. Press the *Create repository* button.
+    g. You now have a repository in your own GitHub account that is a copy of the Managed Structure Template for you to begin working with.
+2. Clone your newly-created repository to a directory in your local development environment so that you can begin authoring your own Griptape Cloud Managed Structure.
+3. Start Skatepark.
+    ```bash
+    gt skatepark start
+    ```
+4. In a separate terminal window, register a Structure from within the directory of the locally cloned repository.
+    ```bash
+    gt skatepark register --directory structure/ --main-file structure.py
+    ```
+    This will result in the ID of the registered Structure. It is important to make note of this ID as it will be used to distinguish which Structure you want to run. You can register any number of Structures.
 
-from griptape.config import StructureConfig, StructureGlobalDriversConfig
-from griptape.drivers import (
-    GriptapeCloudEventListenerDriver,
-    OpenAiChatPromptDriver,
-)
-from griptape.events import (
-    EventListener,
-)
-from griptape.structures import Agent
-from griptape.tools import Calculator
+    The example client program uses the environment variable `GT_STRUCTURE_ID` to determine which Structure to run.
+    Set this environment variable to the Structure ID you registered in the previous step.
+    ```bash
+    export GT_STRUCTURE_ID={STRUCTURE_ID}
+    ```
 
-structure = Agent(
-    tools=[Calculator(off_prompt=False)],
-    config=StructureConfig(
-        global_drivers=StructureGlobalDriversConfig(
-            prompt_driver=OpenAiChatPromptDriver(
-                model="gpt-4",
-                stream=True,
-            ),
-        )
-    ),
-    event_listeners=[
-        EventListener(
-            driver=GriptapeCloudEventListenerDriver(
-                base_url="http://127.0.0.1:5000",
-                api_key=os.environ["GRIPTAPE_CLOUD_API_KEY"],
-            ),
-        )
-    ],
-)
+    Or you can register and set the environment variable in one step.
+    ```bash
+    export GT_STRUCTURE_ID=$(gt skatepark register --directory structure/ --main-file structure.py)
+    ```
 
-structure.run(sys.argv[1]) # Structure Run arguments are passed in via standard input. 
-```
+> [!IMPORTANT]
+> Structures registered with the Skatepark are not persisted across restarts. You will need to re-register the Structure each time you restart Skatepark.
+5. Confirm that the Structure is registered.
+    ```bash
+    gt skatepark list
+    ```
+    You should see a list of registered Structures and the directories they point to, confirming that your Structure was properly registered
+6. You can load environment variables into your Structure by creating an `.env` file in the directory of the Structure you registered. 
+    a. Create a file named `.env` in the `structure/` directory.
+    b. Open the `.env` file in a text editor.
+    c. The template expects an `OPENAI_API_KEY` environment variable by default to function. Add OPENAI_API_KEY=_your OpenAI API Key here_ to the `.env` file and save it.
+    d. As you expand on the template, you may add any other environment variables your Structure depends on to this file.
+7. Rebuild the structure to load in the new environment variable. 
+    Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild. 
+    ```bash
+    gt skatepark build
+    ```
+8. Now that your Structure is registered and built with environment variables, use the example client program to call Skatepark's API for running the Structure.
 
-And a `requirements.txt` file with the following content.
-```
-griptape
-```
+> [!IMPORTANT]
+> The client program is an _example_ for how to interact with the Managed Structure's API. It is useful for testing your Managed Structure locally, but ultimately you will want to integrate your Managed Structure with your own application. 
 
-3. Start the emulator.
-```
-gt cloud server start
-```
+    Navigate to the `example-client` directory.
+    ```bash
+    cd example-client
+    ```
 
-By default, the emulator runs on `127.0.0.1` and port `5000`. You can change these values by providing the `--host` and `--port` options.
-```
-gt cloud server start --host localhost --port 5001
-```
-We'll continue with the default values for the rest of this guide.
+    Install the dependencies required by the example client program.
+    ```bash
+    poetry install
+    ```
 
-4. In a separate terminal window, register a Structure.
-```
-gt cloud server register --directory skatepark-local --main-file structure.py
-```
+    Run the example client program.
+    ```bash
+    poetry run python client.py
+    ```
 
-5. Run your Structure from a separate program. Here is an example using the `requests` library.
-```python
-import requests
-import time
+    You should see the result of the Structure answering `What is 123 * 34, 23 / 12.3, and 9 ^ 4`, indicating a successful run. 
 
-host = "http://127.0.0.1:5000"
-
-# Start a run with the args "What is 5 ^ 2".
-# These args will be passed into our Structure program as standard input.
-response = requests.post(f"{host}/api/structures/active/runs", json={"env": {}, "args": ["What is 5 ^ 2"]})
-response.raise_for_status()
-
-# Runs are asynchronous, so we need to poll the status until it's no longer running.
-run_id = response.json()["run_id"]
-status = response.json()["status"]
-while status == "RUNNING":
-    response = requests.get(f"{host}/api/runs/{run_id}")
-    response.raise_for_status()
-    status = response.json()["status"]
-    
-    time.sleep(1) # Poll every second.
-
-output = response.json()["output"]
-print(output["value"])
-```
-
-And our output should be:
-```
-The result of 5 raised to the power of 2 is 25.
-```
 
 ## Documentation
 

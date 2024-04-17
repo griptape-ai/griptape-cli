@@ -1,11 +1,8 @@
+import os
 import click
 import functools
 import uvicorn
 import requests
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def server_options(func):
@@ -13,7 +10,7 @@ def server_options(func):
         "--host",
         "-h",
         type=str,
-        help="Host to run the server on",
+        help="Host to run the Skatepark emulator on",
         default="127.0.0.1",
         required=False,
     )
@@ -21,7 +18,7 @@ def server_options(func):
         "--port",
         "-p",
         type=int,
-        help="Port to run the server on",
+        help="Port to run the Skatepark emulator on",
         default=5000,
         required=False,
     )
@@ -67,27 +64,26 @@ def structure_options(func):
 
 @click.group()
 @click.pass_context
-def server(ctx):
+def skatepark(ctx):
     pass
 
 
-@server.command(name="start")
+@skatepark.command(name="start")
 @server_options
 def start(
     host: str,
     port: int,
 ) -> None:
     """Starts the Griptape server."""
-    logger.info(f"Server started at http://{host}:{port}")
     uvicorn.run(
-        "griptapecli.core.server:app",
+        "griptapecli.core.skatepark:app",
         host=host,
         port=port,
-        reload=True,
+        reload=False,
     )
 
 
-@server.command(name="register")
+@skatepark.command(name="register")
 @server_options
 @structure_options
 def register(
@@ -97,9 +93,8 @@ def register(
     main_file: str,
     environment: list[tuple[str, str]],
 ) -> None:
-    logger.debug("Structure registered")
     url = f"http://{host}:{port}/api/structures"
-    logger.info(f"Registering structure: {directory}")
+    directory = directory.rstrip("/")
     response = requests.post(
         url,
         json={
@@ -108,18 +103,24 @@ def register(
             "environment": dict(environment),
         },
     )
-    logger.info(response.text)
+    response.raise_for_status()
+
+    structure_id = response.json()["structure_id"]
+
+    click.echo(structure_id)
 
 
-@server.command(name="build")
+@skatepark.command(name="build")
 @server_options
 @click.option(
     "--structure-id",
     "-s",
     type=str,
     help="Id of the Structure to build",
-    default="active",
-    required=False,
+    required=True,
+    prompt=True,
+    default=lambda: os.environ.get("GT_STRUCTURE_ID", ""),
+    show_default="GT_STRUCTURE_ID environment variable",
 )
 def build(
     host: str,
@@ -127,7 +128,55 @@ def build(
     structure_id: str,
 ) -> None:
     url = f"http://{host}:{port}/api/structures/{structure_id}/build"
-    requests.post(
+    response = requests.post(
         url,
         json={},
     )
+    response.raise_for_status()
+
+    click.echo(f"Structure built: {structure_id}")
+
+
+@skatepark.command(name="list")
+@server_options
+def list_structures(
+    host: str,
+    port: int,
+) -> None:
+    url = f"http://{host}:{port}/api/structures"
+    response = requests.get(url)
+    response.raise_for_status()
+
+    structures = response.json()
+    if structures:
+        for structure in structures:
+            structure_id = structure["structure_id"]
+            directory = structure["directory"].rstrip("/")
+            main_file = structure["main_file"]
+            click.echo(f"{structure_id} -> {directory}/{main_file}")
+    else:
+        click.echo("No structures registered")
+
+
+@skatepark.command(name="remove")
+@server_options
+@click.option(
+    "--structure-id",
+    "-s",
+    type=str,
+    help="Id of the Structure to remove",
+    required=True,
+    prompt=True,
+    default=lambda: os.environ.get("GT_STRUCTURE_ID", ""),
+    show_default="GT_STRUCTURE_ID environment variable",
+)
+def remove_structure(
+    host: str,
+    port: int,
+    structure_id: str,
+) -> None:
+    url = f"http://{host}:{port}/api/structures/{structure_id}"
+    response = requests.delete(url)
+    response.raise_for_status()
+
+    click.echo(f"Structure removed: {structure_id}")
