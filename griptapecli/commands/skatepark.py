@@ -94,7 +94,7 @@ def register(
     environment: list[tuple[str, str]],
 ) -> None:
     url = f"http://{host}:{port}/api/structures"
-    directory = directory.rstrip("/")
+    directory = os.path.abspath(directory.rstrip("/"))
     response = requests.post(
         url,
         json={
