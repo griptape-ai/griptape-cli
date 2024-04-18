@@ -45,16 +45,6 @@ def structure_options(func):
         default="structure.py",
         required=False,
     )
-    @click.option(
-        "environment",
-        "--environment",
-        "-e",
-        type=(str, str),
-        help="Environment key-pairs for the Structure",
-        multiple=True,
-        default=[],
-        required=False,
-    )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -91,7 +81,6 @@ def register(
     port: int,
     directory: str,
     main_file: str,
-    environment: list[tuple[str, str]],
 ) -> None:
     url = f"http://{host}:{port}/api/structures"
     directory = os.path.abspath(directory)
@@ -100,7 +89,6 @@ def register(
         json={
             "directory": directory,
             "main_file": main_file,
-            "environment": dict(environment),
         },
     )
 
