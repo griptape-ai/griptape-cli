@@ -52,9 +52,7 @@ def build_structure(structure_id: str) -> Structure:
     logger.info(f"Building structure: {structure_id}")
     structure = state.get_structure(structure_id)
 
-    if not os.path.exists(structure.directory):
-        raise HTTPException(status_code=400, detail="Directory does not exist")
-
+    _validate_files(structure)
     structure.env = dotenv_values(f"{structure.directory}/.env")
 
     subprocess.call(
@@ -74,11 +72,7 @@ def create_structure_run(structure_id: str, run: Run) -> Run:
     logger.info(f"Creating run for structure: {structure_id}")
     structure = state.get_structure(structure_id)
 
-    if not os.path.exists(structure.directory):
-        raise HTTPException(status_code=400, detail="Directory does not exist")
-
-    if not os.path.exists(f"{structure.directory}/{structure.main_file}"):
-        raise HTTPException(status_code=400, detail="Main file does not exist")
+    _validate_files(structure)
 
     process = subprocess.Popen(
         [".venv/bin/python3", structure.main_file, *run.args],
@@ -152,3 +146,20 @@ def create_run_event(run_id: str, event_value: dict) -> Event:
 def get_run_events(run_id: str) -> list[Event]:
     logger.info(f"Getting events for run: {run_id}")
     return state.runs[run_id].run.events
+
+
+def _validate_files(structure: Structure):
+    if not os.path.exists(structure.directory):
+        raise HTTPException(status_code=400, detail="Directory does not exist")
+
+    if not os.path.isdir(structure.directory):
+        raise HTTPException(status_code=400, detail="Path is not a directory")
+
+    if not os.path.exists(f"{structure.directory}/{structure.main_file}"):
+        raise HTTPException(status_code=400, detail="Main file does not exist")
+
+    if not os.path.isfile(f"{structure.directory}/{structure.main_file}"):
+        raise HTTPException(status_code=400, detail="Main file is not a file")
+
+    if not os.path.exists(f"{structure.directory}/requirements.txt"):
+        raise HTTPException(status_code=400, detail="requirements.txt does not exist")
