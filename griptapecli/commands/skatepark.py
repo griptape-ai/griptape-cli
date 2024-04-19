@@ -66,24 +66,24 @@ def start(
 ) -> None:
     """Starts the Griptape server."""
     uvicorn.run(
-        "griptapecli.core.skatepark:app",
-        host=host,
-        port=port,
-        reload=False,
+        "griptapecli.core.skatepark:app", host=host, port=port, reload=False, workers=4
     )
 
 
 @skatepark.command(name="register")
 @server_options
 @structure_options
+@click.option("--tldr", is_flag=True)
 def register(
     host: str,
     port: int,
     directory: str,
     main_file: str,
+    tldr: bool,
 ) -> None:
     url = f"http://{host}:{port}/api/structures"
     directory = os.path.abspath(directory)
+    click.echo(f"Registering Structure from {directory}/{main_file}")
     response = requests.post(
         url,
         json={
@@ -100,7 +100,10 @@ def register(
 
     structure_id = response.json()["structure_id"]
 
-    click.echo(structure_id)
+    if tldr:
+        click.echo(structure_id)
+    else:
+        click.echo(f"Structure registered with id: {structure_id}")
 
 
 @skatepark.command(name="build")
@@ -120,6 +123,7 @@ def build(
     port: int,
     structure_id: str,
 ) -> None:
+    click.echo(f"Building Structure: {structure_id}")
     url = f"http://{host}:{port}/api/structures/{structure_id}/build"
     response = requests.post(
         url,

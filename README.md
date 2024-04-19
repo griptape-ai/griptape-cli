@@ -64,7 +64,7 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 
     Or you can register and set the environment variable in one step.
     ```bash
-    export GT_STRUCTURE_ID=$(gt skatepark register --directory structure/ --main-file structure.py)
+    export GT_STRUCTURE_ID=$(gt skatepark register --directory structure/ --main-file structure.py --tldr)
     ```
 
 > [!IMPORTANT]
