@@ -65,9 +65,7 @@ def start(
     port: int,
 ) -> None:
     """Starts the Griptape server."""
-    uvicorn.run(
-        "griptapecli.core.skatepark:app", host=host, port=port, reload=False, workers=4
-    )
+    uvicorn.run("griptapecli.core.skatepark:app", host=host, port=port, reload=False)
 
 
 @skatepark.command(name="register")
