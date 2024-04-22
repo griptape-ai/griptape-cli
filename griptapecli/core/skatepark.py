@@ -10,6 +10,8 @@ from fastapi import FastAPI, HTTPException
 from .models import Event, Run, Structure
 from .state import State, RunProcess
 
+import asyncio
+
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -101,7 +103,7 @@ def list_structure_runs(structure_id: str) -> list[Run]:
     ]
 
 
-@app.patch("/api/runs/{run_id}")
+@app.patch("/api/structure-runs/{run_id}")
 def patch_run(run_id: str, values: dict) -> Run:
     logger.info(f"Patching run: {run_id}")
     cur_run = state.runs[run_id].run.model_dump()
@@ -111,24 +113,18 @@ def patch_run(run_id: str, values: dict) -> Run:
     return new_run
 
 
-@app.get("/api/runs/{run_id}")
+@app.get("/api/structure-runs/{run_id}")
 def get_run(run_id: str) -> Run:
     logger.info(f"Getting run: {run_id}")
 
     run = state.runs[run_id]
 
-    if run.process is not None:
-        stdout, stderr = run.process.communicate()
-        if run.process.returncode != 0:
-            run.run.status = Run.Status.FAILED
-
-        run.run.stdout = stdout
-        run.run.stderr = stderr
+    _check_run_process(run)
 
     return state.runs[run_id].run
 
 
-@app.post("/api/runs/{run_id}/events")
+@app.post("/api/structure-runs/{run_id}/events")
 def create_run_event(run_id: str, event_value: dict) -> Event:
     logger.info(f"Creating event for run: {run_id}")
     event = Event(value=event_value)
@@ -137,15 +133,17 @@ def create_run_event(run_id: str, event_value: dict) -> Event:
 
     if event.value.get("type") == "FinishStructureRunEvent":
         current_run.run.output = event.value.get("output_task_output")
-        current_run.run.status = Run.Status.COMPLETED
+        _check_run_process(current_run)
 
     return event
 
 
-@app.get("/api/runs/{run_id}/events")
+@app.get("/api/structure-runs/{run_id}/events")
 def get_run_events(run_id: str) -> list[Event]:
     logger.info(f"Getting events for run: {run_id}")
-    return state.runs[run_id].run.events
+    return sorted(
+        state.runs[run_id].run.events, key=lambda event: event.value["timestamp"]
+    )
 
 
 def _validate_files(structure: Structure):
@@ -163,3 +161,21 @@ def _validate_files(structure: Structure):
 
     if not os.path.exists(f"{structure.directory}/requirements.txt"):
         raise HTTPException(status_code=400, detail="requirements.txt does not exist")
+
+
+def _check_run_process(run_process: RunProcess) -> RunProcess:
+    process = run_process.process
+
+    if process is not None:
+        return_code = process.poll()
+        if return_code is not None:
+            stdout, stderr = run_process.process.communicate()
+            if return_code == 0:
+                run_process.run.status = Run.Status.COMPLETED
+            else:
+                run_process.run.status = Run.Status.FAILED
+
+            run_process.run.stdout = stdout
+            run_process.run.stderr = stderr
+
+    return run_process
