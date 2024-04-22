@@ -19,7 +19,7 @@ class Run(BaseModel):
         FAILED = "FAILED"
 
     run_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
-    structure: Structure = Field(default=None)
+    structure_id: str = Field(default=None)
     status: Status = Field(default=Status.RUNNING)
     args: list[str] = Field(default_factory=lambda: [])
     env: dict = Field(default_factory=lambda: {})
@@ -27,6 +27,7 @@ class Run(BaseModel):
     output: Optional[dict] = Field(default=None)
     stdout: Optional[bytes] = Field(default=None)
     stderr: Optional[bytes] = Field(default=None)
+    process_id: Optional[int] = Field(default=None)
 
 
 class Structure(BaseModel):

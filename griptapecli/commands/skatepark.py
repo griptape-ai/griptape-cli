@@ -1,7 +1,7 @@
 import os
 import click
+import subprocess
 import functools
-import uvicorn
 import requests
 
 
@@ -64,10 +64,23 @@ def start(
     host: str,
     port: int,
 ) -> None:
-    """Starts the Griptape server."""
-    uvicorn.run(
-        "griptapecli.core.skatepark:app", host=host, port=port, reload=False, workers=4
+    subprocess.run(
+        [
+            "gunicorn",
+            "griptapecli.core.skatepark:app",
+            "--preload",
+            "--workers",
+            "4",
+            "--worker-class",
+            "uvicorn.workers.UvicornWorker",
+            "--bind",
+            f"{host}:{port}",
+        ]
     )
+    """Starts the Griptape server."""
+    # uvicorn.run(
+    #     "griptapecli.core.skatepark:app", host=host, port=port, reload=False, workers=4
+    # )
 
 
 @skatepark.command(name="register")

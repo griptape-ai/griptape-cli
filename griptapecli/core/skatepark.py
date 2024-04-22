@@ -4,11 +4,13 @@ import logging
 import os
 import subprocess
 
+import psutil
 from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException
 
 from .models import Event, Run, Structure
-from .state import State, RunProcess
+from .state import State, Run
+
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -54,6 +56,7 @@ def build_structure(structure_id: str) -> Structure:
 
     _validate_files(structure)
     structure.env = dotenv_values(f"{structure.directory}/.env")
+    state.register_structure(structure)
 
     subprocess.call(
         ["python3", "-m", "venv", ".venv"],
@@ -74,19 +77,41 @@ def create_structure_run(structure_id: str, run: Run) -> Run:
 
     _validate_files(structure)
 
-    process = subprocess.Popen(
-        [".venv/bin/python3", structure.main_file, *run.args],
-        cwd=structure.directory,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        env={
-            **os.environ,
-            **structure.env,
-            **run.env,
-            "GT_CLOUD_RUN_ID": run.run_id,
-        },
-    )
-    state.runs[run.run_id] = RunProcess(run=run, process=process)
+    with open("stdout", "w") as stdout, open("stderr", "w") as stderr:
+        process = subprocess.Popen(
+            [".venv/bin/python3", structure.main_file, *run.args],
+            cwd=structure.directory,
+            stdout=stdout,
+            stderr=stderr,
+            env={
+                **os.environ,
+                **structure.env,
+                **run.env,
+                "GT_CLOUD_RUN_ID": run.run_id,
+            },
+        )
+        run.structure_id = structure_id
+        run.process_id = process.pid
+        state.runs[run.run_id] = run
+
+        # Check if the process will fail immediately (e.g. syntax error)
+        return_code = None
+        try:
+            return_code = psutil.Process(process.pid).wait(timeout=1)
+        except psutil.TimeoutExpired:
+            pass
+        finally:
+            if return_code != 0:
+                state.runs[run.run_id].status = Run.Status.FAILED
+
+                with open("stderr", "rb") as stderr:
+                    state.update_run(
+                        run.run_id,
+                        {"status": Run.Status.FAILED, "stderr": stderr.read()},
+                    )
+                    raise HTTPException(
+                        status_code=400, detail=str(state.runs[run.run_id].stderr)
+                    )
 
     return run
 
@@ -94,58 +119,46 @@ def create_structure_run(structure_id: str, run: Run) -> Run:
 @app.get("/api/structures/{structure_id}/runs")
 def list_structure_runs(structure_id: str) -> list[Run]:
     logger.info(f"Listing runs for structure: {structure_id}")
-    return [
-        run.run
-        for run in state.runs.values()
-        if run.run.structure.structure_id == structure_id
-    ]
+    return [run for run in state.runs.values() if run.structure_id == structure_id]
 
 
-@app.patch("/api/runs/{run_id}")
+@app.patch("/api/structure-runs/{run_id}")
 def patch_run(run_id: str, values: dict) -> Run:
     logger.info(f"Patching run: {run_id}")
-    cur_run = state.runs[run_id].run.model_dump()
+    cur_run = state.runs[run_id].model_dump()
     new_run = Run(**(cur_run | values))
     state.runs[run_id].run = new_run
 
     return new_run
 
 
-@app.get("/api/runs/{run_id}")
+@app.get("/api/structure-runs/{run_id}")
 def get_run(run_id: str) -> Run:
     logger.info(f"Getting run: {run_id}")
 
-    run = state.runs[run_id]
-
-    if run.process is not None:
-        stdout, stderr = run.process.communicate()
-        if run.process.returncode != 0:
-            run.run.status = Run.Status.FAILED
-
-        run.run.stdout = stdout
-        run.run.stderr = stderr
-
-    return state.runs[run_id].run
+    return state.runs[run_id]
 
 
-@app.post("/api/runs/{run_id}/events")
+@app.post("/api/structure-runs/{run_id}/events")
 def create_run_event(run_id: str, event_value: dict) -> Event:
     logger.info(f"Creating event for run: {run_id}")
     event = Event(value=event_value)
-    current_run = state.runs[run_id]
-    current_run.run.events.append(event)
+    run = state.runs[run_id]
+    run.events.append(event)
 
     if event.value.get("type") == "FinishStructureRunEvent":
-        current_run.run.output = event.value.get("output_task_output")
-        current_run.run.status = Run.Status.COMPLETED
+        run.output = event.value.get("output_task_output")
+        run.status = Run.Status.COMPLETED
+
+    state.runs[run_id] = run
 
     return event
 
 
-@app.get("/api/runs/{run_id}/events")
+@app.get("/api/structure-runs/{run_id}/events")
 def get_run_events(run_id: str) -> list[Event]:
     logger.info(f"Getting events for run: {run_id}")
-    return state.runs[run_id].run.events
+    return state.runs[run_id].events
 
 
 def _validate_files(structure: Structure):
