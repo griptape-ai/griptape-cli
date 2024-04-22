@@ -5,9 +5,15 @@ import os
 import subprocess
 
 from dotenv import dotenv_values
-from fastapi import FastAPI, HTTPException
-
-from .models import Event, Run, Structure
+from fastapi import FastAPI, HTTPException, status
+from .models import (
+    Event,
+    StructureRun,
+    Structure,
+    ListStructuresResponseModel,
+    ListStructureRunsResponseModel,
+    ListStructureRunEventsResponseModel,
+)
 from .state import State, RunProcess
 
 app = FastAPI()
@@ -18,7 +24,7 @@ logger = logging.getLogger(__name__)
 state = State()
 
 
-@app.post("/api/structures")
+@app.post("/api/structures", status_code=status.HTTP_201_CREATED)
 def create_structure(structure: Structure) -> Structure:
     logger.info(f"Creating structure: {structure}")
 
@@ -28,26 +34,30 @@ def create_structure(structure: Structure) -> Structure:
     except HTTPException as e:
         state.remove_structure(structure.structure_id)
 
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     return structure
 
 
-@app.get("/api/structures")
-def list_structures() -> list[Structure]:
+@app.get(
+    "/api/structures",
+    response_model=ListStructuresResponseModel,
+    status_code=status.HTTP_200_OK,
+)
+def list_structures():
     logger.info("Listing structures")
 
-    return list(state.structures.values())
+    return {"structures": list(state.structures.values())}
 
 
-@app.delete("/api/structures/{structure_id}")
-def delete_structure(structure_id: str) -> str:
+@app.delete("/api/structures/{structure_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_structure(structure_id: str):
     logger.info(f"Deleting structure: {structure_id}")
 
-    return state.remove_structure(structure_id)
+    state.remove_structure(structure_id)
 
 
-@app.post("/api/structures/{structure_id}/build")
+@app.post("/api/structures/{structure_id}/build", status_code=status.HTTP_201_CREATED)
 def build_structure(structure_id: str) -> Structure:
     logger.info(f"Building structure: {structure_id}")
     structure = state.get_structure(structure_id)
@@ -67,8 +77,8 @@ def build_structure(structure_id: str) -> Structure:
     return structure
 
 
-@app.post("/api/structures/{structure_id}/runs")
-def create_structure_run(structure_id: str, run: Run) -> Run:
+@app.post("/api/structures/{structure_id}/runs", status_code=status.HTTP_201_CREATED)
+def create_structure_run(structure_id: str, run: StructureRun) -> StructureRun:
     logger.info(f"Creating run for structure: {structure_id}")
     structure = state.get_structure(structure_id)
 
@@ -91,28 +101,35 @@ def create_structure_run(structure_id: str, run: Run) -> Run:
     return run
 
 
-@app.get("/api/structures/{structure_id}/runs")
-def list_structure_runs(structure_id: str) -> list[Run]:
+@app.get(
+    "/api/structures/{structure_id}/runs",
+    response_model=ListStructureRunsResponseModel,
+    status_code=status.HTTP_200_OK,
+)
+def list_structure_runs(structure_id: str):
     logger.info(f"Listing runs for structure: {structure_id}")
-    return [
-        run.run
-        for run in state.runs.values()
-        if run.run.structure.structure_id == structure_id
-    ]
+
+    return {
+        "structure_runs": [
+            run.run
+            for run in state.runs.values()
+            if run.run.structure.structure_id == structure_id
+        ]
+    }
 
 
-@app.patch("/api/structure-runs/{run_id}")
-def patch_run(run_id: str, values: dict) -> Run:
+@app.patch("/api/structure-runs/{run_id}", status_code=status.HTTP_200_OK)
+def patch_run(run_id: str, values: dict) -> StructureRun:
     logger.info(f"Patching run: {run_id}")
     cur_run = state.runs[run_id].run.model_dump()
-    new_run = Run(**(cur_run | values))
+    new_run = StructureRun(**(cur_run | values))
     state.runs[run_id].run = new_run
 
     return new_run
 
 
-@app.get("/api/structure-runs/{run_id}")
-def get_run(run_id: str) -> Run:
+@app.get("/api/structure-runs/{run_id}", status_code=status.HTTP_200_OK)
+def get_run(run_id: str) -> StructureRun:
     logger.info(f"Getting run: {run_id}")
 
     run = state.runs[run_id]
@@ -122,7 +139,7 @@ def get_run(run_id: str) -> Run:
     return state.runs[run_id].run
 
 
-@app.post("/api/structure-runs/{run_id}/events")
+@app.post("/api/structure-runs/{run_id}/events", status_code=status.HTTP_201_CREATED)
 def create_run_event(run_id: str, event_value: dict) -> Event:
     logger.info(f"Creating event for run: {run_id}")
     event = Event(value=event_value)
@@ -136,15 +153,24 @@ def create_run_event(run_id: str, event_value: dict) -> Event:
     return event
 
 
-@app.get("/api/structure-runs/{run_id}/events")
-def get_run_events(run_id: str) -> list[Event]:
+@app.get(
+    "/api/structure-runs/{run_id}/events",
+    status_code=status.HTTP_200_OK,
+    response_model=ListStructureRunEventsResponseModel,
+)
+def list_run_events(run_id: str):
     logger.info(f"Getting events for run: {run_id}")
-    return sorted(
-        state.runs[run_id].run.events, key=lambda event: event.value["timestamp"]
-    )
+
+    events = state.runs[run_id].run.events
+
+    sorted_events = sorted(events, key=lambda event: event.value["timestamp"])
+
+    return {
+        "events": sorted_events,
+    }
 
 
-def _validate_files(structure: Structure):
+def _validate_files(structure: Structure) -> None:
     if not os.path.exists(structure.directory):
         raise HTTPException(status_code=400, detail="Directory does not exist")
 
@@ -169,9 +195,9 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
         if return_code is not None:
             stdout, stderr = run_process.process.communicate()
             if return_code == 0:
-                run_process.run.status = Run.Status.COMPLETED
+                run_process.run.status = StructureRun.Status.COMPLETED
             else:
-                run_process.run.status = Run.Status.FAILED
+                run_process.run.status = StructureRun.Status.FAILED
 
             run_process.run.stdout = stdout
             run_process.run.stderr = stderr

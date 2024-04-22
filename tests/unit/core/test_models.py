@@ -1,4 +1,4 @@
-from griptapecli.core.models import Event, Run, Structure
+from griptapecli.core.models import Event, StructureRun, Structure
 
 
 class TestModels:
@@ -6,7 +6,7 @@ class TestModels:
         assert Event(value={})
 
     def test_run_model_init(self):
-        assert Run()
+        assert StructureRun()
 
     def test_structure_model_init(self):
         assert Structure(
