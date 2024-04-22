@@ -10,8 +10,6 @@ from fastapi import FastAPI, HTTPException
 from .models import Event, Run, Structure
 from .state import State, RunProcess
 
-import asyncio
-
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
