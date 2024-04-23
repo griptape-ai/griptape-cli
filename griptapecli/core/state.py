@@ -4,12 +4,12 @@ from attrs import Factory, define, field
 from fastapi import HTTPException
 from subprocess import Popen
 
-from .models import Run, Structure
+from .models import StructureRun, Structure
 
 
 @define
 class RunProcess:
-    run: Run = field()
+    run: StructureRun = field()
     process: Popen = field()
 
 

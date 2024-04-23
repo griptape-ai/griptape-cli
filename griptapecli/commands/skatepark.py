@@ -65,7 +65,13 @@ def start(
     port: int,
 ) -> None:
     """Starts the Griptape server."""
-    uvicorn.run("griptapecli.core.skatepark:app", host=host, port=port, reload=False)
+    uvicorn.run(
+        "griptapecli.core.skatepark:app",
+        host=host,
+        port=port,
+        reload=False,
+        workers=1,  # Skatepark only supports 1 worker. We're explictly setting it here to avoid inheriting it from the environment.
+    )
 
 
 @skatepark.command(name="register")
