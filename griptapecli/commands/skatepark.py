@@ -85,6 +85,7 @@ def register(
     main_file: str,
     tldr: bool,
 ) -> None:
+    """Registers a Structure with Skatepark."""
     url = f"http://{host}:{port}/api/structures"
     directory = os.path.abspath(directory)
     click.echo(f"Registering Structure from {directory}/{main_file}")
@@ -99,7 +100,7 @@ def register(
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        click.echo(f"HTTP Error: {e.response.text}")
+        click.echo(f"HTTP Error: {e}")
         return
 
     structure_id = response.json()["structure_id"]
@@ -119,7 +120,7 @@ def register(
     help="Id of the Structure to build",
     required=True,
     prompt=True,
-    default=lambda: os.environ.get("GT_STRUCTURE_ID", ""),
+    default=lambda: os.environ.get("GT_STRUCTURE_ID", None),
     show_default="GT_STRUCTURE_ID environment variable",
 )
 def build(
@@ -127,6 +128,7 @@ def build(
     port: int,
     structure_id: str,
 ) -> None:
+    """Builds the Structure by creating a virtual environment and installing dependencies."""
     click.echo(f"Building Structure: {structure_id}")
     url = f"http://{host}:{port}/api/structures/{structure_id}/build"
     response = requests.post(
@@ -136,7 +138,7 @@ def build(
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        click.echo(f"HTTP Error: {e.response.text}")
+        click.echo(f"HTTP Error: {e}")
         return
 
     click.echo(f"Structure built: {structure_id}")
@@ -148,13 +150,14 @@ def list_structures(
     host: str,
     port: int,
 ) -> None:
+    """Lists all registered Structures."""
     url = f"http://{host}:{port}/api/structures"
     response = requests.get(url)
 
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        click.echo(f"HTTP Error: {e.response.text}")
+        click.echo(f"HTTP Error: {e}")
         return
 
     structures = response.json()
@@ -178,7 +181,7 @@ def list_structures(
     help="Id of the Structure to remove",
     required=True,
     prompt=True,
-    default=lambda: os.environ.get("GT_STRUCTURE_ID", ""),
+    default=lambda: os.environ.get("GT_STRUCTURE_ID", None),
     show_default="GT_STRUCTURE_ID environment variable",
 )
 def remove_structure(
@@ -186,13 +189,14 @@ def remove_structure(
     port: int,
     structure_id: str,
 ) -> None:
+    """Removes a Structure from Skatepark."""
     url = f"http://{host}:{port}/api/structures/{structure_id}"
     response = requests.delete(url)
 
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        click.echo(f"HTTP Error: {e.response.text}")
+        click.echo(f"HTTP Error: {e}")
         return
 
     click.echo(f"Structure removed: {structure_id}")
