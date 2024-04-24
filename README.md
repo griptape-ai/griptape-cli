@@ -50,9 +50,10 @@ Use Skatepark to develop, test, and validate that your program will operate as e
     ```bash
     gt skatepark start
     ```
-4. In a separate terminal window, register a Structure from within the directory of the locally cloned repository.
+4. Open a new terminal window. Navigate to the directory with the locally-cloned repository.
+5. Register a Structure with Skatepark.
     ```bash
-    gt skatepark register --directory structure/ --main-file structure.py
+    gt skatepark register --main-file structure.py
     ```
     This will result in the ID of the registered Structure. It is important to make note of this ID as it will be used to distinguish which Structure you want to run. You can register any number of Structures.
 
@@ -64,7 +65,7 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 
     Or you can register and set the environment variable in one step.
     ```bash
-    export GT_STRUCTURE_ID=$(gt skatepark register --directory structure/ --main-file structure.py --tldr)
+    export GT_STRUCTURE_ID=$(gt skatepark register --main-file structure.py --tldr)
     ```
 
 > [!IMPORTANT]
