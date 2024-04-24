@@ -5,7 +5,7 @@ import os
 import subprocess
 
 from dotenv import dotenv_values
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Request
 from .models import (
     Event,
     StructureRun,
@@ -78,7 +78,9 @@ def build_structure(structure_id: str) -> Structure:
 
 
 @app.post("/api/structures/{structure_id}/runs", status_code=status.HTTP_201_CREATED)
-def create_structure_run(structure_id: str, run: StructureRun) -> StructureRun:
+def create_structure_run(
+    structure_id: str, run: StructureRun, request: Request
+) -> StructureRun:
     logger.info(f"Creating run for structure: {structure_id}")
     structure = state.get_structure(structure_id)
 
@@ -91,9 +93,10 @@ def create_structure_run(structure_id: str, run: StructureRun) -> StructureRun:
         stdout=subprocess.PIPE,
         env={
             **os.environ,
+            "GT_CLOUD_RUN_ID": run.run_id,
+            "GT_CLOUD_BASE_URL": str(request.base_url),
             **structure.env,
             **run.env,
-            "GT_CLOUD_RUN_ID": run.run_id,
         },
     )
     state.runs[run.run_id] = RunProcess(run=run, process=process)
