@@ -198,7 +198,7 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
         if return_code is not None:
             stdout, stderr = run_process.process.communicate()
             if return_code == 0:
-                run_process.run.status = StructureRun.Status.COMPLETED
+                run_process.run.status = StructureRun.Status.SUCCEEDED
             else:
                 run_process.run.status = StructureRun.Status.FAILED
 
