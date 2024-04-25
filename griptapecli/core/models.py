@@ -18,7 +18,7 @@ class StructureRun(BaseModel):
         SUCCEEDED = "SUCCEEDED"
         FAILED = "FAILED"
 
-    run_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    structure_run_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     structure: Structure = Field(default=None)
     status: Status = Field(default=Status.RUNNING)
     args: list[str] = Field(default_factory=lambda: [])
