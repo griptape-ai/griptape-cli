@@ -15,7 +15,7 @@ class Event(BaseModel):
 class StructureRun(BaseModel):
     class Status(Enum):
         RUNNING = "RUNNING"
-        COMPLETED = "COMPLETED"
+        SUCCEEDED = "SUCCEEDED"
         FAILED = "FAILED"
 
     run_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
