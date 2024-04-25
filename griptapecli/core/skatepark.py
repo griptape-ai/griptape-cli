@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import threading
+import time
 
 from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException, status
@@ -22,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 state = State()
+
+DEFAULT_CLOUD_RUN_DELAY = "0"
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
@@ -97,6 +101,11 @@ def create_structure_run(structure_id: str, run: StructureRun) -> StructureRun:
         },
     )
     state.runs[run.structure_run_id] = RunProcess(run=run, process=process)
+
+    threading.Thread(
+        target=_set_structure_run_to_running,
+        args=(state.runs[run.structure_run_id].run,),
+    ).start()
 
     return run
 
@@ -205,3 +214,13 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
             run_process.run.stderr = stderr
 
     return run_process
+
+
+def _set_structure_run_to_running(structure_run: StructureRun) -> StructureRun:
+    run_delay = int(os.getenv("GT_CLOUD_RUN_DELAY", DEFAULT_CLOUD_RUN_DELAY))
+
+    time.sleep(run_delay)
+
+    structure_run.status = StructureRun.Status.RUNNING
+
+    return structure_run
