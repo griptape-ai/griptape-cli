@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import os
 import subprocess
@@ -10,11 +11,13 @@ from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException, status, Request
 from .models import (
     Event,
+    Log,
     StructureRun,
     Structure,
     ListStructuresResponseModel,
     ListStructureRunsResponseModel,
     ListStructureRunEventsResponseModel,
+    ListStructureRunLogsResponseModel,
 )
 from .state import State, RunProcess
 
@@ -184,6 +187,21 @@ def list_run_events(structure_run_id: str):
     }
 
 
+@app.get(
+    "/api/structure-runs/{structure_run_id}/logs",
+    status_code=status.HTTP_200_OK,
+    response_model=ListStructureRunLogsResponseModel,
+)
+def list_run_logs(structure_run_id: str):
+    logger.info(f"Getting logs for run: {structure_run_id}")
+
+    logs = state.runs[structure_run_id].run.logs
+
+    return {
+        "logs": logs,
+    }
+
+
 def _validate_files(structure: Structure) -> None:
     if not os.path.exists(structure.directory):
         raise HTTPException(status_code=400, detail="Directory does not exist")
@@ -213,8 +231,16 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
             else:
                 run_process.run.status = StructureRun.Status.FAILED
 
-            run_process.run.stdout = stdout
-            run_process.run.stderr = stderr
+            timestamp = datetime.datetime.now().isoformat()
+            if stdout is not None:
+                run_process.run.logs.append(
+                    Log(time=timestamp, message=stdout, stream=Log.Stream.STDOUT)
+                )
+
+            if stderr is not None:
+                run_process.run.logs.append(
+                    Log(time=timestamp, message=stderr, stream=Log.Stream.STDERR)
+                )
 
     return run_process
 

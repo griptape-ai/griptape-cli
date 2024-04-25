@@ -12,6 +12,16 @@ class Event(BaseModel):
     value: dict = Field()
 
 
+class Log(BaseModel):
+    class Stream(Enum):
+        STDOUT = "stdout"
+        STDERR = "stderr"
+
+    time: str = Field()
+    message: str = Field()
+    stream: Stream = Field()
+
+
 class StructureRun(BaseModel):
     class Status(Enum):
         RUNNING = "RUNNING"
@@ -25,9 +35,8 @@ class StructureRun(BaseModel):
     args: list[str] = Field(default_factory=lambda: [])
     env: dict = Field(default_factory=lambda: {})
     events: list[Event] = Field(default_factory=lambda: [])
+    logs: list[Log] = Field(default_factory=lambda: [])
     output: Optional[dict] = Field(default=None)
-    stdout: Optional[bytes] = Field(default=None)
-    stderr: Optional[bytes] = Field(default=None)
 
 
 class Structure(BaseModel):
@@ -53,3 +62,7 @@ class ListStructureRunsResponseModel(BaseModel):
 
 class ListStructureRunEventsResponseModel(BaseModel):
     events: list[Event] = Field(default_factory=lambda: [])
+
+
+class ListStructureRunLogsResponseModel(BaseModel):
+    logs: list[Log] = Field(default_factory=lambda: [])
