@@ -8,15 +8,16 @@ import time
 
 from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException, status
+
 from .models import (
     Event,
-    StructureRun,
-    Structure,
-    ListStructuresResponseModel,
-    ListStructureRunsResponseModel,
     ListStructureRunEventsResponseModel,
+    ListStructureRunsResponseModel,
+    ListStructuresResponseModel,
+    Structure,
+    StructureRun,
 )
-from .state import State, RunProcess
+from .state import RunProcess, State
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 state = State()
 
-DEFAULT_CLOUD_RUN_DELAY = "0"
+DEFAULT_CLOUD_RUN_DELAY = "2"
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
