@@ -98,7 +98,7 @@ def create_structure_run(structure_id: str, run: StructureRun) -> StructureRun:
             **os.environ,
             **structure.env,
             **run.env,
-            "GT_CLOUD_RUN_ID": run.structure_run_id,
+            "GT_CLOUD_STRUCTURE_RUN_ID": run.structure_run_id,
         },
     )
     state.runs[run.structure_run_id] = RunProcess(run=run, process=process)
