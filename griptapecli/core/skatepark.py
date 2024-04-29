@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 state = State()
 
-DEFAULT_CLOUD_RUN_DELAY = "2"
+DEFAULT_QUEUE_DELAY = "2"
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
@@ -246,7 +246,7 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
 
 
 def _set_structure_run_to_running(structure_run: StructureRun) -> StructureRun:
-    run_delay = int(os.getenv("GT_CLOUD_RUN_DELAY", DEFAULT_CLOUD_RUN_DELAY))
+    run_delay = int(os.getenv("GT_SKATEPARK_QUEUE_DELAY", DEFAULT_QUEUE_DELAY))
 
     time.sleep(run_delay)
 

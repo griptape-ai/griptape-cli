@@ -110,8 +110,8 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 
 # Simulating Structure Run Delay
 By default, Skatepark adds a 2 second delay before transitioniong Structure Runs from the `QUEUED` state to the `RUNNING` state.
-If you want to change this delay in order to test the behavior of your Structure when it is in the `QUEUED` state, you can do so by setting the `GT_CLOUD_RUN_DELAY` environment variable.
-For example, a value of `GT_CLOUD_RUN_DELAY=5` will cause Skatepark to wait 5 seconds before transitioning the Structure Run from `QUEUED` to `RUNNING`. Setting a value of `GT_CLOUD_RUN_DELAY=0` will cause Skatepark to transition the Structure Run immediately.
+If you want to change this delay in order to test the behavior of your Structure when it is in the `QUEUED` state, you can do so by setting the `GT_SKATEPARK_QUEUE_DELAY` environment variable.
+For example, a value of `GT_SKATEPARK_QUEUE_DELAY=5` will cause Skatepark to wait 5 seconds before transitioning the Structure Run from `QUEUED` to `RUNNING`. Setting a value of `GT_SKATEPARK_QUEUE_DELAY=0` will cause Skatepark to transition the Structure Run immediately.
 
 Note that this environment variable must be set in the terminal where the Skatepark server is running, not in the terminal where the client program is run.
 
