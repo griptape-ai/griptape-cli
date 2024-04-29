@@ -14,6 +14,7 @@ from .models import (
     ListStructureRunEventsResponseModel,
     ListStructureRunsResponseModel,
     ListStructuresResponseModel,
+    ListStructureRunLogsResponseModel,
     Structure,
     StructureRun,
     Log,
@@ -231,12 +232,12 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
                 run_process.run.status = StructureRun.Status.FAILED
 
             timestamp = datetime.datetime.now().isoformat()
-            if stdout is not None:
+            if stdout is not None and stdout != b"":
                 run_process.run.logs.append(
                     Log(time=timestamp, message=stdout, stream=Log.Stream.STDOUT)
                 )
 
-            if stderr is not None:
+            if stderr is not None and stderr != b"":
                 run_process.run.logs.append(
                     Log(time=timestamp, message=stderr, stream=Log.Stream.STDERR)
                 )
