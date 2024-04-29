@@ -11,15 +11,13 @@ from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException, status, Request
 from .models import (
     Event,
-    Log,
-    StructureRun,
-    Structure,
-    ListStructuresResponseModel,
-    ListStructureRunsResponseModel,
     ListStructureRunEventsResponseModel,
-    ListStructureRunLogsResponseModel,
+    ListStructureRunsResponseModel,
+    ListStructuresResponseModel,
+    Structure,
+    StructureRun,
 )
-from .state import State, RunProcess
+from .state import RunProcess, State
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 state = State()
 
-DEFAULT_CLOUD_RUN_DELAY = "0"
+DEFAULT_CLOUD_RUN_DELAY = "2"
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
@@ -99,7 +97,7 @@ def create_structure_run(
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         env={
-            "GT_CLOUD_RUN_ID": run.run_id,
+            "GT_CLOUD_STRUCTURE_RUN_ID": run.structure_run_id,
             "GT_CLOUD_BASE_URL": str(request.base_url),
             **os.environ,
             **structure.env,
