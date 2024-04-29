@@ -96,7 +96,7 @@ def create_structure_run(
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         env={
-            "GT_CLOUD_RUN_ID": run.run_id,
+            "GT_CLOUD_STRUCTURE_RUN_ID": run.structure_run_id,
             "GT_CLOUD_BASE_URL": str(request.base_url),
             **os.environ,
             **structure.env,
