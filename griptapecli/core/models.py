@@ -15,12 +15,13 @@ class Event(BaseModel):
 class StructureRun(BaseModel):
     class Status(Enum):
         RUNNING = "RUNNING"
-        COMPLETED = "COMPLETED"
+        SUCCEEDED = "SUCCEEDED"
+        QUEUED = "QUEUED"
         FAILED = "FAILED"
 
-    run_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    structure_run_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     structure: Structure = Field(default=None)
-    status: Status = Field(default=Status.RUNNING)
+    status: Status = Field(default=Status.QUEUED)
     args: list[str] = Field(default_factory=lambda: [])
     env: dict = Field(default_factory=lambda: {})
     events: list[Event] = Field(default_factory=lambda: [])

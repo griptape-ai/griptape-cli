@@ -3,18 +3,21 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import threading
+import time
 
 from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException, status
+
 from .models import (
     Event,
-    StructureRun,
-    Structure,
-    ListStructuresResponseModel,
-    ListStructureRunsResponseModel,
     ListStructureRunEventsResponseModel,
+    ListStructureRunsResponseModel,
+    ListStructuresResponseModel,
+    Structure,
+    StructureRun,
 )
-from .state import State, RunProcess
+from .state import RunProcess, State
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 state = State()
+
+DEFAULT_CLOUD_RUN_DELAY = "2"
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
@@ -93,10 +98,15 @@ def create_structure_run(structure_id: str, run: StructureRun) -> StructureRun:
             **os.environ,
             **structure.env,
             **run.env,
-            "GT_CLOUD_RUN_ID": run.run_id,
+            "GT_CLOUD_STRUCTURE_RUN_ID": run.structure_run_id,
         },
     )
-    state.runs[run.run_id] = RunProcess(run=run, process=process)
+    state.runs[run.structure_run_id] = RunProcess(run=run, process=process)
+
+    threading.Thread(
+        target=_set_structure_run_to_running,
+        args=(state.runs[run.structure_run_id].run,),
+    ).start()
 
     return run
 
@@ -118,32 +128,34 @@ def list_structure_runs(structure_id: str):
     }
 
 
-@app.patch("/api/structure-runs/{run_id}", status_code=status.HTTP_200_OK)
-def patch_run(run_id: str, values: dict) -> StructureRun:
-    logger.info(f"Patching run: {run_id}")
-    cur_run = state.runs[run_id].run.model_dump()
+@app.patch("/api/structure-runs/{structure_run_id}", status_code=status.HTTP_200_OK)
+def patch_run(structure_run_id: str, values: dict) -> StructureRun:
+    logger.info(f"Patching run: {structure_run_id}")
+    cur_run = state.runs[structure_run_id].run.model_dump()
     new_run = StructureRun(**(cur_run | values))
-    state.runs[run_id].run = new_run
+    state.runs[structure_run_id].run = new_run
 
     return new_run
 
 
-@app.get("/api/structure-runs/{run_id}", status_code=status.HTTP_200_OK)
-def get_run(run_id: str) -> StructureRun:
-    logger.info(f"Getting run: {run_id}")
+@app.get("/api/structure-runs/{structure_run_id}", status_code=status.HTTP_200_OK)
+def get_run(structure_run_id: str) -> StructureRun:
+    logger.info(f"Getting run: {structure_run_id}")
 
-    run = state.runs[run_id]
+    run = state.runs[structure_run_id]
 
     _check_run_process(run)
 
-    return state.runs[run_id].run
+    return state.runs[structure_run_id].run
 
 
-@app.post("/api/structure-runs/{run_id}/events", status_code=status.HTTP_201_CREATED)
-def create_run_event(run_id: str, event_value: dict) -> Event:
-    logger.info(f"Creating event for run: {run_id}")
+@app.post(
+    "/api/structure-runs/{structure_run_id}/events", status_code=status.HTTP_201_CREATED
+)
+def create_run_event(structure_run_id: str, event_value: dict) -> Event:
+    logger.info(f"Creating event for run: {structure_run_id}")
     event = Event(value=event_value)
-    current_run = state.runs[run_id]
+    current_run = state.runs[structure_run_id]
     current_run.run.events.append(event)
 
     if event.value.get("type") == "FinishStructureRunEvent":
@@ -154,14 +166,14 @@ def create_run_event(run_id: str, event_value: dict) -> Event:
 
 
 @app.get(
-    "/api/structure-runs/{run_id}/events",
+    "/api/structure-runs/{structure_run_id}/events",
     status_code=status.HTTP_200_OK,
     response_model=ListStructureRunEventsResponseModel,
 )
-def list_run_events(run_id: str):
-    logger.info(f"Getting events for run: {run_id}")
+def list_run_events(structure_run_id: str):
+    logger.info(f"Getting events for run: {structure_run_id}")
 
-    events = state.runs[run_id].run.events
+    events = state.runs[structure_run_id].run.events
 
     sorted_events = sorted(events, key=lambda event: event.value["timestamp"])
 
@@ -195,7 +207,7 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
         if return_code is not None:
             stdout, stderr = run_process.process.communicate()
             if return_code == 0:
-                run_process.run.status = StructureRun.Status.COMPLETED
+                run_process.run.status = StructureRun.Status.SUCCEEDED
             else:
                 run_process.run.status = StructureRun.Status.FAILED
 
@@ -203,3 +215,13 @@ def _check_run_process(run_process: RunProcess) -> RunProcess:
             run_process.run.stderr = stderr
 
     return run_process
+
+
+def _set_structure_run_to_running(structure_run: StructureRun) -> StructureRun:
+    run_delay = int(os.getenv("GT_CLOUD_RUN_DELAY", DEFAULT_CLOUD_RUN_DELAY))
+
+    time.sleep(run_delay)
+
+    structure_run.status = StructureRun.Status.RUNNING
+
+    return structure_run
