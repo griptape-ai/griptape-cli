@@ -16,6 +16,7 @@ from .models import (
     ListStructuresResponseModel,
     Structure,
     StructureRun,
+    Log,
 )
 from .state import RunProcess, State
 
