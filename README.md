@@ -26,7 +26,7 @@ Today, it provides an emulator for Griptape Cloud Managed Structures, which allo
     ```
 
     ```bash
-    pipx install ./griptape-cli
+    pipx install ./griptape-cli --force
     ```
 2. Verify installation
     ```bash

@@ -88,7 +88,8 @@ def register(
     """Registers a Structure with Skatepark."""
     url = f"http://{host}:{port}/api/structures"
     directory = os.path.abspath(directory)
-    click.echo(f"Registering Structure from {directory}/{main_file}")
+    if tldr is False:
+        click.echo(f"Registering Structure from {directory}/{main_file}")
     response = requests.post(
         url,
         json={
@@ -160,7 +161,7 @@ def list_structures(
         click.echo(f"HTTP Error: {e}")
         return
 
-    structures = response.json()
+    structures = response.json()["structures"]
     if structures:
         for structure in structures:
             structure_id = structure["structure_id"]
