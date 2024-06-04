@@ -157,17 +157,27 @@ def get_run(structure_run_id: str) -> StructureRun:
 @app.post(
     "/api/structure-runs/{structure_run_id}/events", status_code=status.HTTP_201_CREATED
 )
-def create_run_event(structure_run_id: str, event_value: dict) -> Event:
-    logger.info(f"Creating event for run: {structure_run_id}")
-    event = Event(value=event_value)
-    current_run = state.runs[structure_run_id]
-    current_run.run.events.append(event)
+def create_run_event(
+    structure_run_id: str, event_value: dict | list[dict]
+) -> Event | list[Event]:
+    if isinstance(event_value, dict):
+        event_values = [event_value]
+    else:
+        event_values = event_value
 
-    if event.value.get("type") == "FinishStructureRunEvent":
-        current_run.run.output = event.value.get("output_task_output")
-        _check_run_process(current_run)
+    events = []
+    for event_value in event_values:
+        logger.info(f"Creating event for run: {structure_run_id}")
+        event = Event(value=event_value)
+        events.append(event)
+        current_run = state.runs[structure_run_id]
+        current_run.run.events.append(event)
 
-    return event
+        if event.value.get("type") == "FinishStructureRunEvent":
+            current_run.run.output = event.value.get("output_task_output")
+            _check_run_process(current_run)
+
+    return events
 
 
 @app.get(
