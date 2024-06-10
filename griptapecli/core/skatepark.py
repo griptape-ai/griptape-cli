@@ -72,14 +72,21 @@ def build_structure(structure_id: str) -> Structure:
     _validate_files(structure)
     structure.env = dotenv_values(f"{structure.directory}/.env")
 
-    subprocess.call(
-        ["python3", "-m", "venv", ".venv"],
-        cwd=structure.directory,
-    )
-    subprocess.call(
-        [".venv/bin/pip3", "install", "-r", "requirements.txt"],
-        cwd=structure.directory,
-    )
+
+    try:
+        subprocess.call(
+            ["powershell.exe", ".venv/Scripts/Activate.ps1"],
+            cwd=structure.directory,
+        )
+    except Exception as e:
+        logger.error(f"Baker: {e}")
+    try:
+        subprocess.call(
+            [".venv/Scripts/pip3.exe", "install", "-r", "requirements.txt"],
+            cwd=structure.directory,
+        )
+    except Exception as e:
+        logger.error(f"Stevens: {e}")
 
     return structure
 
@@ -94,7 +101,7 @@ def create_structure_run(
     _validate_files(structure)
 
     process = subprocess.Popen(
-        [".venv/bin/python3", structure.main_file, *run.args],
+        [".venv/Scripts/python.exe", structure.main_file, *run.args],
         cwd=structure.directory,
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
