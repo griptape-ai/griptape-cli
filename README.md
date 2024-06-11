@@ -12,6 +12,7 @@ Today, it provides an emulator for Griptape Cloud Managed Structures, which allo
 - A GitHub account.
 - Python 3.11.
 - [Poetry](https://python-poetry.org) for running the example client program.
+- Linux operating system functionality. For Windows users, Griptape recommends the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/linux/install) for this functionality.
 
 ## Installation 
 
