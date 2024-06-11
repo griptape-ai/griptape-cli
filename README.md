@@ -70,22 +70,30 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 
 > [!IMPORTANT]
 > Structures registered with the Skatepark are not persisted across restarts. You will need to re-register the Structure each time you restart Skatepark.
-5. Confirm that the Structure is registered.
+6. Confirm that the Structure is registered.
     ```bash
     gt skatepark list
     ```
     You should see a list of registered Structures and the directories they point to, confirming that your Structure was properly registered
-6. You can load environment variables into your Structure by creating an `.env` file in the directory of the Structure you registered. 
-    1. Create a file named `.env` in the `structure/` directory.
+7. You can load environment variables into your Structure by creating an `.env` file in the directory of the Structure you registered. 
+    1. Create a file named `.env` in the same directory that your Structure code is in.
     2. Open the `.env` file in a text editor.
+    3. Copy the contents of `.env.structure.example` into the `.env` file. This specifies all of the values necessary and explains how they are used.
     3. The template expects an `OPENAI_API_KEY` environment variable by default to function. Add OPENAI_API_KEY=_your OpenAI API Key here_ to the `.env` file and save it.
     4. As you expand on the template, you may add any other environment variables your Structure depends on to this file.
-7. Rebuild the structure to load in the new environment variable. 
+8. Rebuild the structure to load in the new environment variable. 
     Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild. 
     ```bash
     gt skatepark build
     ```
-8. Now that your Structure is registered and built with environment variables, use the example client program to call Skatepark's API for running the Structure.
+9. Now that your Structure is registered and built, we want to be able to call it from within another program. The managed structure template offers an example client that can invoke your Structure. You have to configure the client with details on where to find the Structure in order for it to be called.
+    1. Create a file named `.env` in the `example-client` directory.
+    2. Open the `.env` file in a text editor
+    3. Copy the contents of `.env.client.example` (located within the `example-client/` directory) into the `.env` file. This specifies all of the values necessary and explains how they are used.
+    4. The client needs to know where the Structure is hosted, as specified in the `GT_CLOUD_BASE_URL` environment variable. When testing against the Skatepark emulator, we will use the default value address that Skatepark is running on. Set `GT_CLOUD_BASE_URL=http://127.0.0.1:5000`.
+    5. The client needs to know which Structure it is attempting to invoke, as specified in the `GT_STRUCTURE_ID` environment variable. This is the same value you got when you registered the Structure with Skatepark in step 5. You can quickly get this value by typing `gt skatepark list` to see the list of all registered Structures. Copy this value into GT_STRUCTURE_ID=_your Skatepark Structure ID here_.
+    6. Save the `.env` file. 
+10. The example client is configured, now you can use it to call Skatepark's API for running the Structure.
 
     Navigate to the `example-client` directory.
     ```bash
