@@ -69,7 +69,7 @@ def start(
         "griptapecli.core.skatepark:app",
         host=host,
         port=port,
-        reload=False,
+        reload=True,
         workers=1,  # Skatepark only supports 1 worker. We're explictly setting it here to avoid inheriting it from the environment.
     )
 
