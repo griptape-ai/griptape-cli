@@ -1,14 +1,29 @@
 from __future__ import annotations
 
+import os
 import datetime
 import logging
-import os
 import subprocess
 import threading
 import time
+import boto3
 
 from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException, status, Request
+from fastapi.responses import StreamingResponse
+from griptape.common import Message, PromptStack
+from griptape.drivers import (
+    AmazonBedrockCohereEmbeddingDriver,
+    AmazonBedrockPromptDriver,
+    AmazonBedrockTitanEmbeddingDriver,
+    AzureOpenAiChatPromptDriver,
+    BaseEmbeddingDriver,
+    BasePromptDriver,
+    GoogleEmbeddingDriver,
+    GooglePromptDriver,
+    AzureOpenAiEmbeddingDriver,
+)
+
 from .models import (
     Event,
     ListStructureRunEventsResponseModel,
@@ -18,8 +33,12 @@ from .models import (
     Structure,
     StructureRun,
     Log,
+    PromptDriverRequestModel,
+    EmbeddingDriverRequestModel,
 )
 from .state import RunProcess, State
+
+from routellm.controller import Controller
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +47,101 @@ logger = logging.getLogger(__name__)
 
 state = State()
 
+controller = Controller(
+    routers=["mf"],
+    strong_model="gpt-4o",
+    weak_model="llama3-8b-instruct",
+)
+
 DEFAULT_QUEUE_DELAY = "2"
+
+model_to_internal_model_map: dict[str, str] = {
+    # Azure OpenAi
+    "gpt-4o": "gpt-4o",
+    "gpt-3.5-turbo": "gpt-3.5-turbo",
+    "text-embedding-3-large": "text-embedding-3-large",
+    "text-embedding-3-small": "text-embedding-3-small",
+    # Bedrock
+    "titan-embed-text": "amazon.titan-embed-text-v1",
+    "embed-english": "cohere.embed-english-v3",
+    "claude-3-sonnet-20240229": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "claude-3-haiku-20240307": "anthropic.claude-3-haiku-20240307-v1:0",
+    "j2-ultra": "ai21.j2-ultra",
+    "j2-mid": "ai21.j2-mid",
+    "titan-text-lite": "amazon.titan-text-lite-v1",
+    "command-r-plus": "cohere.command-r-plus-v1:0",
+    "command-r": "cohere.command-r-v1:0",
+    "command-text": "cohere.command-text-v14",
+    "command-light-text": "cohere.command-light-text-v14",
+    "llama3-8b-instruct": "meta.llama3-8b-instruct-v1:0",
+    "llama3-70b-instruct": "meta.llama3-70b-instruct-v1:0",
+    "llama2-13b-chat": "meta.llama2-13b-chat-v1",
+    "llama2-70b-chat": "meta.llama2-70b-chat-v1",
+    "mistral-7b-instruct": "mistral.mistral-7b-instruct-v0:2",
+    "mixtral-8x7b-instruct": "mistral.mixtral-8x7b-instruct-v0:1",
+    "mistral-large-2402": "mistral.mistral-large-2402-v1:0",
+    "mistral-small-2402": "mistral.mistral-small-2402-v1:0",
+    # Gemini
+    "gemini-1.0-pro": "gemini-1.0-pro",
+    "gemini-1.5-flash": "gemini-1.5-flash",
+    "gemini-1.5-pro": "gemini-1.5-pro",
+}
+
+model_prefix_to_prompt_driver_map: dict[str, type[BasePromptDriver]] = {
+    "gpt": AzureOpenAiChatPromptDriver,
+    "anthropic": AmazonBedrockPromptDriver,
+    "ai21": AmazonBedrockPromptDriver,
+    "amazon": AmazonBedrockPromptDriver,
+    "meta": AmazonBedrockPromptDriver,
+    "mistral": AmazonBedrockPromptDriver,
+    "gemini": GooglePromptDriver,
+}
+
+model_prefix_to_embedding_driver_map: dict[str, type[BaseEmbeddingDriver]] = {
+    "text-embedding-3-small": AzureOpenAiEmbeddingDriver,
+    "text-embedding-3-large": AzureOpenAiEmbeddingDriver,
+    "titan-embed": AmazonBedrockTitanEmbeddingDriver,
+    "embed-english": AmazonBedrockCohereEmbeddingDriver,
+    "text-embedding-004": GoogleEmbeddingDriver,
+}
+
+embedding_driver_to_config_map: dict[type[BaseEmbeddingDriver], dict] = {
+    AmazonBedrockTitanEmbeddingDriver: {
+        "session": boto3.Session(
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+            region_name=os.environ["AWS_DEFAULT_REGION"],
+        ),
+    },
+    AmazonBedrockCohereEmbeddingDriver: {
+        "session": boto3.Session(
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+            region_name=os.environ["AWS_DEFAULT_REGION"],
+        ),
+    },
+    AzureOpenAiEmbeddingDriver: {
+        "api_key": os.environ["AZURE_OPENAI_API_KEY"],
+        "azure_endpoint": os.environ["AZURE_OPENAI_ENDPOINT"],
+    },
+}
+
+prompt_driver_to_config_map: dict[type[BasePromptDriver], dict] = {
+    AmazonBedrockPromptDriver: {
+        "session": boto3.Session(
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+            region_name=os.environ["AWS_DEFAULT_REGION"],
+        ),
+    },
+    GooglePromptDriver: {
+        "api_key": os.environ["GOOGLE_API_KEY"],
+    },
+    AzureOpenAiChatPromptDriver: {
+        "api_key": os.environ["AZURE_OPENAI_API_KEY"],
+        "azure_endpoint": os.environ["AZURE_OPENAI_ENDPOINT"],
+    },
+}
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
@@ -136,7 +249,7 @@ def list_structure_runs(structure_id: str):
 @app.patch("/api/structure-runs/{structure_run_id}", status_code=status.HTTP_200_OK)
 def patch_run(structure_run_id: str, values: dict) -> StructureRun:
     logger.info(f"Patching run: {structure_run_id}")
-    cur_run = state.runs[structure_run_id].run.model_dump()
+    cur_run = state.runs[structure_run_id].run.model_dump()  # type: ignore
     new_run = StructureRun(**(cur_run | values))
     state.runs[structure_run_id].run = new_run
 
@@ -212,6 +325,51 @@ def list_run_logs(structure_run_id: str):
     }
 
 
+@app.post("/api/drivers/prompt", response_model=None, status_code=status.HTTP_200_OK)
+def prompt_driver(value: PromptDriverRequestModel) -> dict:
+    driver = _get_prompt_driver_from_model(value.messages, value.params)
+
+    prompt_stack = PromptStack(
+        messages=[Message.from_dict(message) for message in value.messages]
+    )
+
+    try:
+        message = driver.try_run(prompt_stack)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return message.to_dict()
+
+
+@app.post(
+    "/api/drivers/prompt-stream", response_model=None, status_code=status.HTTP_200_OK
+)
+async def prompt_driver_stream(value: PromptDriverRequestModel) -> StreamingResponse:
+    driver = _get_prompt_driver_from_model(value.messages, value.params)
+
+    prompt_stack = PromptStack(
+        messages=[Message.from_dict(message) for message in value.messages]
+    )
+
+    async def chunks_streamer():
+        try:
+            for i in driver.try_stream(prompt_stack):
+                yield i.to_json()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    return StreamingResponse(chunks_streamer())
+
+
+@app.post("/api/drivers/embedding", status_code=status.HTTP_200_OK)
+def embedding(value: EmbeddingDriverRequestModel) -> list[float]:
+    driver = _get_embedding_driver_from_model(value.params)
+
+    embeddings = driver.embed_string(value.input)
+
+    return embeddings
+
+
 def _validate_files(structure: Structure) -> None:
     if not os.path.exists(structure.directory):
         raise HTTPException(status_code=400, detail="Directory does not exist")
@@ -263,3 +421,84 @@ def _set_structure_run_to_running(structure_run: StructureRun) -> StructureRun:
     structure_run.status = StructureRun.Status.RUNNING
 
     return structure_run
+
+
+def _get_prompt_driver_from_model(
+    messages: list[dict], params: dict
+) -> BasePromptDriver:
+    model = params["model"]
+
+    if model == "auto":
+        if messages:
+            logger.info(messages[-1]["content"][0]["artifact"]["value"])
+            prompt = messages[-1]["content"][0]["artifact"]["value"]
+        else:
+            raise HTTPException(status_code=400, detail="No messages provided")
+
+        model = controller.route(
+            prompt=prompt,
+            router="mf",
+            threshold=0.11593,
+        )
+        logger.info("Routed model %s", model)
+
+    internal_model = model_to_internal_model_map.get(model)
+
+    logger.info("Internal model %s", internal_model)
+    if internal_model is None:
+        raise HTTPException(status_code=400, detail=f"Model {model} not supported")
+
+    driver_cls = next(
+        (
+            v
+            for k, v in model_prefix_to_prompt_driver_map.items()
+            if internal_model.startswith(k)
+        ),
+        None,
+    )
+
+    logger.info("Driver class %s", driver_cls)
+    if driver_cls is None:
+        raise HTTPException(status_code=400, detail=f"Model {model} not supported")
+
+    driver_config = prompt_driver_to_config_map.get(driver_cls)
+
+    if driver_config is None:
+        raise HTTPException(status_code=400, detail=f"Model {model} not supported")
+
+    full_params = params | {"model": internal_model} | driver_config
+    logger.info(full_params)
+    return driver_cls(**full_params)
+
+
+def _get_embedding_driver_from_model(params: dict) -> BaseEmbeddingDriver:
+    model = params["model"]
+    logger.info("Model %s", model)
+
+    internal_model = model_to_internal_model_map.get(model)
+
+    logger.info("Internal model %s", internal_model)
+    if internal_model is None:
+        raise HTTPException(status_code=400, detail=f"Model {model} not supported")
+
+    driver_cls = next(
+        (
+            v
+            for k, v in model_prefix_to_embedding_driver_map.items()
+            if internal_model.startswith(k)
+        ),
+        None,
+    )
+
+    logger.info("Driver class %s", driver_cls)
+    if driver_cls is None:
+        raise HTTPException(status_code=400, detail=f"Model {model} not supported")
+
+    driver_config = embedding_driver_to_config_map.get(driver_cls)
+
+    if driver_config is None:
+        raise HTTPException(status_code=400, detail=f"Model {model} not supported")
+
+    full_params = params | {"model": internal_model} | driver_config
+    logger.info(full_params)
+    return driver_cls(**full_params)

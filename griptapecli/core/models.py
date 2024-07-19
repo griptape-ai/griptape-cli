@@ -66,3 +66,13 @@ class ListStructureRunEventsResponseModel(BaseModel):
 
 class ListStructureRunLogsResponseModel(BaseModel):
     logs: list[Log] = Field(default_factory=lambda: [])
+
+
+class PromptDriverRequestModel(BaseModel):
+    messages: list[dict]
+    params: dict
+
+
+class EmbeddingDriverRequestModel(BaseModel):
+    input: str
+    params: dict
