@@ -34,6 +34,7 @@ Today, it provides an emulator for Griptape Cloud Managed Structures, which allo
    ```
 
 2. Verify installation
+
    ```bash
    gt --help
    ```
@@ -46,16 +47,18 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 1. Start by creating a new repository in your own Github account from the [Managed Structure Template](https://github.com/griptape-ai/managed-structure-template).
    1. Make sure you're logged in to GitHub.
    2. Go to the [Managed Structure Template repo](https://github.com/griptape-ai/managed-structure-template).
-   3. Select the _Use this template_ drop-down.
-   4. Choose _Create a new repository_.
+   3. Select the *Use this template* drop-down.
+   4. Choose *Create a new repository*.
    5. Provide a name for the new repository and (optionally) a description.
-   6. Press the _Create repository_ button.
+   6. Press the *Create repository* button.
    7. You now have a repository in your own GitHub account that is a copy of the Managed Structure Template for you to begin working with.
 2. Clone your newly-created repository to a directory in your local development environment so that you can begin authoring your own Griptape Cloud Managed Structure.
 3. Start Skatepark.
+
    ```bash
    gt skatepark start
    ```
+
 4. Open a new terminal window. Navigate to the directory with the locally-cloned repository.
 5. Register a Structure with Skatepark.
 
@@ -78,13 +81,16 @@ Use Skatepark to develop, test, and validate that your program will operate as e
    export GT_STRUCTURE_ID=$(gt skatepark register --structure-config-file structure_config.yaml --tldr)
    ```
 
-> [!IMPORTANT]
-> Structures registered with the Skatepark are not persisted across restarts. You will need to re-register the Structure each time you restart Skatepark. 6. Confirm that the Structure is registered.
+   > [!IMPORTANT]
+   > Structures registered with the Skatepark are not persisted across restarts. You will need to re-register the Structure each time you restart Skatepark.
 
-    ```bash
-    gt skatepark list
-    ```
-    You should see a list of registered Structures and the directories they point to, confirming that your Structure was properly registered
+6. Confirm that the Structure is registered.
+
+   ```bash
+   gt skatepark list
+   ```
+
+   You should see a list of registered Structures and the directories they point to, confirming that your Structure was properly registered
 
 7. You can load environment variables into your Structure by creating an `.env` file in the directory of the Structure you registered.
    1. Create a file named `.env` in the same directory that your Structure code is in.
@@ -94,9 +100,11 @@ Use Skatepark to develop, test, and validate that your program will operate as e
    5. As you expand on the template, you may add any other environment variables your Structure depends on to this file.
 8. Rebuild the structure to load in the new environment variable.
    Note that this is only required for changes to `.env` or `requirements.txt`. Code changes do not require a rebuild.
+
    ```bash
    gt skatepark build
    ```
+
 9. Now that your Structure is registered and built, we want to be able to call it from within another program. The managed structure template offers an example client that can invoke your Structure. You have to configure the client with details on where to find the Structure in order for it to be called.
    1. Create a file named `.env` in the `example-client` directory.
    2. Open the `.env` file in a text editor
@@ -129,7 +137,7 @@ Use Skatepark to develop, test, and validate that your program will operate as e
 > [!IMPORTANT]
 > The client program is an _example_ for how to interact with the Managed Structure's API. It is useful for testing your Managed Structure locally, but ultimately you will want to integrate your Managed Structure with your own application.
 
-# Simulating Structure Run Delay
+## Simulating Structure Run Delay
 
 By default, Skatepark adds a 2 second delay before transitioniong Structure Runs from the `QUEUED` state to the `RUNNING` state.
 If you want to change this delay in order to test the behavior of your Structure when it is in the `QUEUED` state, you can do so by setting the `GT_SKATEPARK_QUEUE_DELAY` environment variable.
