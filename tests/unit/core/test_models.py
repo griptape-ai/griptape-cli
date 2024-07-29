@@ -1,4 +1,4 @@
-from griptapecli.core.models import Event, StructureRun, Structure
+from griptapecli.core.models import Event, Structure, StructureRun
 
 
 class TestModels:
@@ -11,5 +11,5 @@ class TestModels:
     def test_structure_model_init(self):
         assert Structure(
             directory="directory",
-            main_file="main_file",
+            structure_config_file="structure_config.yaml",
         )
