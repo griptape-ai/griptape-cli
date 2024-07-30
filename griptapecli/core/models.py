@@ -30,11 +30,18 @@ class Log(BaseModel):
     stream: Stream = Field()
 
 
+class CacheBuildDependenciesField(BaseModel):
+    enabled: bool = False
+    watched_files: list[str] = Field(default_factory=list)
+
+
 class StructureConfigBuildField(BaseModel):
     pre_build_install_script: Optional[str] = None
     post_build_install_script: Optional[str] = None
     requirements_file: Optional[str] = None
-    full_rebuild_on_file_changes: Optional[list[str]] = None
+    cache_build_dependencies: CacheBuildDependenciesField = Field(
+        default_factory=lambda: CacheBuildDependenciesField()
+    )
 
 
 class StructureConfigRunField(BaseModel):
