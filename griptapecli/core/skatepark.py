@@ -6,18 +6,22 @@ import os
 import subprocess
 import threading
 import time
+from typing import Optional
 
 from dotenv import dotenv_values
-from fastapi import FastAPI, HTTPException, status, Request
+from fastapi import FastAPI, HTTPException, Request, status
+
 from .models import (
     Event,
     ListStructureRunEventsResponseModel,
+    ListStructureRunLogsResponseModel,
     ListStructureRunsResponseModel,
     ListStructuresResponseModel,
-    ListStructureRunLogsResponseModel,
-    Structure,
-    StructureRun,
     Log,
+    Structure,
+    StructureInput,
+    StructureRun,
+    StructureRunInput,
 )
 from .state import RunProcess, State
 
@@ -32,7 +36,12 @@ DEFAULT_QUEUE_DELAY = "2"
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
-def create_structure(structure: Structure) -> Structure:
+def create_structure(structureInput: StructureInput) -> Structure:
+    try:
+        structure = Structure(**structureInput.model_dump())
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
     logger.info(f"Creating structure: {structure}")
 
     state.register_structure(structure)
@@ -57,6 +66,23 @@ def list_structures():
     return {"structures": list(state.structures.values())}
 
 
+@app.get(
+    "/api/structures/{structure_id}",
+    response_model=Structure,
+    status_code=status.HTTP_200_OK,
+)
+def get_structure(structure_id: str):
+    logger.info("Getting structure")
+
+    structure: Optional[Structure] = state.structures.get(structure_id)
+    if structure:
+        return structure
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Structure not found"
+        )
+
+
 @app.delete("/api/structures/{structure_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_structure(structure_id: str):
     logger.info(f"Deleting structure: {structure_id}")
@@ -77,7 +103,20 @@ def build_structure(structure_id: str) -> Structure:
         cwd=structure.directory,
     )
     subprocess.call(
-        [".venv/bin/pip3", "install", "-r", "requirements.txt"],
+        [
+            ".venv/bin/pip3",
+            "install",
+            "-r",
+            (
+                str(
+                    os.path.join(
+                        "./", structure.structure_config.build.requirements_file
+                    )
+                )
+                if structure.structure_config.build.requirements_file
+                else "requirements.txt"
+            ),
+        ],
         cwd=structure.directory,
     )
 
@@ -86,34 +125,40 @@ def build_structure(structure_id: str) -> Structure:
 
 @app.post("/api/structures/{structure_id}/runs", status_code=status.HTTP_201_CREATED)
 def create_structure_run(
-    structure_id: str, run: StructureRun, request: Request
+    structure_id: str, run_input: StructureRunInput, request: Request
 ) -> StructureRun:
     logger.info(f"Creating run for structure: {structure_id}")
     structure = state.get_structure(structure_id)
-
+    structure_run = StructureRun(structure=structure, **run_input.model_dump())
     _validate_files(structure)
 
     process = subprocess.Popen(
-        [".venv/bin/python3", structure.main_file, *run.args],
+        [
+            ".venv/bin/python3",
+            structure.structure_config.run.main_file,
+            *structure_run.args,
+        ],
         cwd=structure.directory,
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         env={
-            "GT_CLOUD_STRUCTURE_RUN_ID": run.structure_run_id,
+            "GT_CLOUD_STRUCTURE_RUN_ID": structure_run.structure_run_id,
             "GT_CLOUD_BASE_URL": str(request.base_url),
             **os.environ,
             **structure.env,
-            **run.env,
+            **structure_run.env,
         },
     )
-    state.runs[run.structure_run_id] = RunProcess(run=run, process=process)
+    state.runs[structure_run.structure_run_id] = RunProcess(
+        run=structure_run, process=process
+    )
 
     threading.Thread(
         target=_set_structure_run_to_running,
-        args=(state.runs[run.structure_run_id].run,),
+        args=(state.runs[structure_run.structure_run_id].run,),
     ).start()
 
-    return run
+    return structure_run
 
 
 @app.get(
@@ -219,14 +264,30 @@ def _validate_files(structure: Structure) -> None:
     if not os.path.isdir(structure.directory):
         raise HTTPException(status_code=400, detail="Path is not a directory")
 
-    if not os.path.exists(f"{structure.directory}/{structure.main_file}"):
+    if not os.path.exists(f"{structure.directory}/{structure.structure_config_file}"):
+        raise HTTPException(
+            status_code=400, detail="Structure Config file does not exist"
+        )
+
+    if not os.path.isfile(f"{structure.directory}/{structure.structure_config_file}"):
+        raise HTTPException(
+            status_code=400, detail="Structure Config file is not a file"
+        )
+
+    main_file = structure.structure_config.run.main_file
+
+    if not os.path.exists(f"{structure.directory}/{main_file}"):
         raise HTTPException(status_code=400, detail="Main file does not exist")
 
-    if not os.path.isfile(f"{structure.directory}/{structure.main_file}"):
+    if not os.path.isfile(f"{structure.directory}/{main_file}"):
         raise HTTPException(status_code=400, detail="Main file is not a file")
 
-    if not os.path.exists(f"{structure.directory}/requirements.txt"):
-        raise HTTPException(status_code=400, detail="requirements.txt does not exist")
+    requirements_file = structure.structure_config.build.requirements_file
+
+    if not os.path.exists(f"{structure.directory}/{requirements_file}"):
+        raise HTTPException(
+            status_code=400, detail="requirements.txt file does not exist"
+        )
 
 
 def _check_run_process(run_process: RunProcess) -> RunProcess:

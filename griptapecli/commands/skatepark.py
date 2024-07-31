@@ -1,8 +1,11 @@
-import os
-import click
 import functools
-import uvicorn
+import os
+
+import click
 import requests
+import uvicorn
+
+from griptapecli.core.models import Structure, StructureRun
 
 
 def server_options(func):
@@ -39,10 +42,10 @@ def structure_options(func):
         required=False,
     )
     @click.option(
-        "--main-file",
+        "--structure-config-file",
         type=str,
-        help="Main file for the Structure",
-        default="structure.py",
+        help="Config file for the Structure",
+        default="structure_config.yaml",
         required=False,
     )
     @functools.wraps(func)
@@ -82,26 +85,26 @@ def register(
     host: str,
     port: int,
     directory: str,
-    main_file: str,
+    structure_config_file: str,
     tldr: bool,
 ) -> None:
     """Registers a Structure with Skatepark."""
     url = f"http://{host}:{port}/api/structures"
     directory = os.path.abspath(directory)
     if tldr is False:
-        click.echo(f"Registering Structure from {directory}/{main_file}")
+        click.echo(f"Registering Structure from {directory}/{structure_config_file}")
     response = requests.post(
         url,
         json={
             "directory": directory,
-            "main_file": main_file,
+            "structure_config_file": structure_config_file,
         },
     )
 
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        click.echo(f"HTTP Error: {e}")
+        click.echo(f"HTTP Error: {e.response.json().get('detail')}")
         return
 
     structure_id = response.json()["structure_id"]
@@ -145,6 +148,94 @@ def build(
     click.echo(f"Structure built: {structure_id}")
 
 
+@skatepark.command(name="run")
+@server_options
+@click.option(
+    "--structure-id",
+    "-s",
+    type=str,
+    help="Id of the Structure to run",
+    required=True,
+    prompt=True,
+    default=lambda: os.environ.get("GT_STRUCTURE_ID", None),
+    show_default="GT_STRUCTURE_ID environment variable",
+)
+@click.option(
+    "--arg",
+    "-a",
+    type=str,
+    help="Argument to pass to the Structure Run",
+    required=False,
+    prompt=True,
+    multiple=True,
+)
+@click.option(
+    "--env",
+    "-e",
+    type=dict,
+    help="Environment Variables to pass to the Structure Run",
+    required=False,
+    prompt=False,
+    default=lambda: {},
+)
+def run(host: str, port: int, structure_id: str, arg: list[str], env: dict) -> None:
+    """Runs the Structure."""
+    click.echo(f"Running Structure: {structure_id}")
+    url = f"http://{host}:{port}/api/structures/{structure_id}/runs"
+
+    response = requests.post(
+        url,
+        json={
+            "args": list(arg),
+            "env": env,
+        },
+    )
+    try:
+        response.raise_for_status()
+        run_id = response.json()["structure_run_id"]
+        run = _get_structure_run(host, port, run_id)
+        while run.status not in [
+            StructureRun.Status.SUCCEEDED,
+            StructureRun.Status.FAILED,
+            StructureRun.Status.CANCELLED,
+        ]:
+            run = _get_structure_run(host, port, run.structure_run_id)
+
+        if run.status == StructureRun.Status.SUCCEEDED:
+            click.echo(f"Structure run succeeded: {run_id}, output: {run.output}")
+        elif run.status == StructureRun.Status.FAILED:
+            click.echo(f"Structure run failed: {run_id}, logs: {run.logs}")
+    except requests.exceptions.HTTPError as e:
+        click.echo(f"HTTP Error: {e}")
+        return
+
+
+def _get_structure_run(
+    host: str,
+    port: int,
+    structure_run_id: str,
+) -> StructureRun:
+    url = f"http://{host}:{port}/api/structure-runs/{structure_run_id}"
+    response = requests.get(url)
+    response.raise_for_status()
+
+    structure_run = response.json()
+    return StructureRun(**structure_run)
+
+
+def _get_structure(
+    host: str,
+    port: int,
+    structure_id: str,
+) -> Structure:
+    url = f"http://{host}:{port}/api/structures/{structure_id}"
+    response = requests.get(url)
+    response.raise_for_status()
+
+    structure = response.json()
+    return Structure(**structure)
+
+
 @skatepark.command(name="list")
 @server_options
 def list_structures(
@@ -166,9 +257,9 @@ def list_structures(
         for structure in structures:
             structure_id = structure["structure_id"]
             directory = structure["directory"]
-            main_file = structure["main_file"]
+            structure_config_file = structure["structure_config_file"]
             env = structure["env"]
-            click.echo(f"{structure_id} -> {directory}/{main_file} ({env})")
+            click.echo(f"{structure_id} -> {directory}/{structure_config_file} ({env})")
     else:
         click.echo("No structures registered")
 
