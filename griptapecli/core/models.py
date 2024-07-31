@@ -110,10 +110,19 @@ class StructureRun(BaseModel):
     output: Optional[dict] = Field(default=None)
 
 
+class StructureInput(BaseModel):
+    directory: str
+    structure_config_file: str
+    env: dict = Field(default_factory=lambda: {})
+
+
 class Structure(BaseModel):
     directory: str = Field()
     structure_config_file: str = Field()
     env: dict = Field(default_factory=lambda: {})
+
+    def model_post_init(self, __context):
+        self._validate_structure()
 
     @computed_field
     @property
@@ -128,6 +137,12 @@ class Structure(BaseModel):
         config_path = f"{self.directory}/{self.structure_config_file}"
         with open(config_path, "r") as config_file:
             return StructureConfig(**yaml.safe_load(config_file))
+
+    def _validate_structure(self):
+        try:
+            self.structure_config
+        except Exception as e:
+            raise ValueError(f"Invalid structure config: {e}")
 
 
 class ListStructuresResponseModel(BaseModel):

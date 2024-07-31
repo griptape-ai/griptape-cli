@@ -19,6 +19,7 @@ from .models import (
     ListStructuresResponseModel,
     Log,
     Structure,
+    StructureInput,
     StructureRun,
     StructureRunInput,
 )
@@ -35,7 +36,12 @@ DEFAULT_QUEUE_DELAY = "2"
 
 
 @app.post("/api/structures", status_code=status.HTTP_201_CREATED)
-def create_structure(structure: Structure) -> Structure:
+def create_structure(structureInput: StructureInput) -> Structure:
+    try:
+        structure = Structure(**structureInput.model_dump())
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
     logger.info(f"Creating structure: {structure}")
 
     state.register_structure(structure)

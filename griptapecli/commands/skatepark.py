@@ -104,7 +104,7 @@ def register(
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        click.echo(f"HTTP Error: {e}")
+        click.echo(f"HTTP Error: {e.response.json().get('detail')}")
         return
 
     structure_id = response.json()["structure_id"]
