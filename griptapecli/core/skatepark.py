@@ -106,6 +106,8 @@ def build_structure(structure_id: str) -> Structure:
         [
             ".venv/bin/pip3",
             "install",
+            "--upgrade",
+            "--force-reinstall",
             "-r",
             (
                 str(
