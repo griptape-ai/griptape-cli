@@ -102,10 +102,12 @@ def build_structure(structure_id: str) -> Structure:
         ["python3", "-m", "venv", ".venv"],
         cwd=structure.directory,
     )
-    subprocess.call(
+    result = subprocess.run(
         [
             ".venv/bin/pip3",
             "install",
+            "--upgrade",
+            "--force-reinstall",
             "-r",
             (
                 str(
@@ -118,7 +120,10 @@ def build_structure(structure_id: str) -> Structure:
             ),
         ],
         cwd=structure.directory,
+        text=True
     )
+
+    logger.info(result.stdout)
 
     return structure
 
