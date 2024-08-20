@@ -120,7 +120,7 @@ def build_structure(structure_id: str) -> Structure:
             ),
         ],
         cwd=structure.directory,
-        text=True
+        text=True,
     )
 
     logger.info(result.stdout)
